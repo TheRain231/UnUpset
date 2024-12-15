@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TimerView: View {
     @ObservedObject var manager: ShieldManager
-    @State var vm: ViewModel = ViewModel()
+    @State var vm: TimerViewModel = TimerViewModel.shared
     private let lineWidth: CGFloat = 24.0
     
     var body: some View {
@@ -51,7 +51,7 @@ struct TimerView: View {
                 .padding()
         }
         .buttonStyle(PlayButtonStyle(isActive: vm.isActive))
-        .animation(.smooth, value: vm.secondsLast)
+        .animation(.smooth, value: vm.secondsLeft)
     }
     
     @ViewBuilder

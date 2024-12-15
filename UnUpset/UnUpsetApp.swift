@@ -11,7 +11,7 @@ import FamilyControls
 @main
 struct UnUpsetApp: App {
     @StateObject private var manager = ShieldManager()
-    //@AppStorage("hasSelection") var doesntHasSelection: Bool = true
+    @Environment(\.scenePhase) private var phase
     
     init(){
         NotificationManager.shared.requestNotificationAuthorization()
@@ -32,7 +32,24 @@ struct UnUpsetApp: App {
                         }
                     }
                 }
-                //.familyActivityPicker(isPresented: $doesntHasSelection, selection: $manager.discouragedSelections)
+        }
+        .onChange(of: phase) { oldPhase, newPhase in
+            switch newPhase {
+            case .background:
+                scheduleAppRefresh()
+                
+                TimerViewModel.shared.leftTime = Date()
+            case .active:
+                if TimerViewModel.shared.isActive {
+                    let diff = Int(Date().timeIntervalSince(TimerViewModel.shared.leftTime))
+                    
+                    TimerViewModel.shared.addTime(diff)
+                }
+            default: break
+            }
+        }
+        .backgroundTask(.appRefresh("removeLimit")) { _ in
+            await manager.unshieldActivities()
         }
     }
 }
