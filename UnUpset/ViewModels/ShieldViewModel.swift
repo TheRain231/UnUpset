@@ -8,8 +8,7 @@
 import Foundation
 
 extension ShieldView {
-    @Observable
-    final class ViewModel{
+    final class ViewModel: ObservableObject{
         func stopTimerButtonAction(){
             NotificationCenter.default.post(name: .timerStop, object: nil)
         }

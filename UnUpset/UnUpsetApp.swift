@@ -15,7 +15,7 @@ struct UnUpsetApp: App {
     
     init(){
         NotificationManager.shared.requestNotificationAuthorization()
-        NotificationManager.shared.scheduleNotifications()
+        NotificationManager.shared.scheduleNotifications()        
     }
     
     let center = AuthorizationCenter.shared
@@ -33,7 +33,7 @@ struct UnUpsetApp: App {
                     }
                 }
         }
-        .onChange(of: phase) { oldPhase, newPhase in
+        .onChange(of: phase) { newPhase in
             switch newPhase {
             case .background:
                 scheduleAppRefresh()

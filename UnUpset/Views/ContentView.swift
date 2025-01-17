@@ -6,36 +6,135 @@
 //
 
 import SwiftUI
+import MessageUI
 
 struct ContentView: View {
     @ObservedObject var manager: ShieldManager
+    @StateObject private var motionManager = MotionManager()
+    @AppStorage("selectedAppearance") var selectedAppearance = AppearanceOption.auto.rawValue
+    @Environment(\.colorScheme) var systemColorScheme
+    
+    @State private var showFeedbackForm = false
+    @State private var showConfirmationAlert = false
+    @State private var showMailUnavailableAlert = false
+    
     var body: some View {
-        TabView {
-            Tab("Timer", systemImage: "timer") {
+        if #available(iOS 18.0, *) {
+            TabView {
+                Tab("Timer", systemImage: "timer") {
+                    ZStack {
+                        Color("BackgroundColor")
+                            .ignoresSafeArea()
+                        TimerView(manager: manager)
+                    }
+                }
+                
+                Tab("Settings", systemImage: "gear") {
+                    ZStack {
+                        Color("BackgroundColor")
+                            .ignoresSafeArea()
+                        ShieldView(manager: manager)
+                    }
+                }
+                
+            }
+            .preferredColorScheme(AppearanceOption(rawValue: selectedAppearance)?.colorScheme)
+            .environment(\.horizontalSizeClass, .compact)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(.primary)
+                    .frame(height: 1)
+                    .offset(y: -50)
+            }
+            .onAppear {
+                setupTabBarAppearance()
+            }
+            .alert("Do you want to send feedback?", isPresented: $showConfirmationAlert) {
+                Button("Yes") {
+                    NotificationCenter.default.post(name: .timerStop, object: nil)
+                    if MFMailComposeViewController.canSendMail() {
+                        showFeedbackForm = true
+                    } else {
+                        showMailUnavailableAlert = true
+                    }
+                }
+                Button("No", role: .cancel) {}
+            }
+            .sheet(isPresented: $showFeedbackForm) {
+                FeedbackView(subject: "Feedback", recipient: "unupsetdeveloper@gmail.com")
+            }
+            .alert(isPresented: $showMailUnavailableAlert) {
+                Alert(title: Text("Error"),
+                      message: Text("The email client is currently unavailable. Please ensure that you have a mail app installed."),
+                      dismissButton: .default(Text("ОК")))
+            }
+            .onChange(of: motionManager.isShaken) { _, isShaken in
+                if isShaken{
+                    showConfirmationAlert = true
+                    print("has Shaken", showConfirmationAlert)
+                }
+                motionManager.isShaken = false
+            }
+        } else {
+            TabView {
                 ZStack {
                     Color("BackgroundColor")
                         .ignoresSafeArea()
                     TimerView(manager: manager)
                 }
-            }
-            
-            Tab("Profile", systemImage: "person") {
+                .tabItem {
+                    Label("Timer",
+                          systemImage: "timer")
+                }
                 ZStack {
                     Color("BackgroundColor")
                         .ignoresSafeArea()
                     ShieldView(manager: manager)
                 }
+                .tabItem {
+                    Label("Settings",
+                          systemImage: "gear")
+                }
             }
-        }
-        .environment(\.horizontalSizeClass, .compact)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color("ButtonActive"))
-                .frame(height: 3)
-                .offset(y: -50)
-        }
-        .onAppear {
-            setupTabBarAppearance()
+            .preferredColorScheme(AppearanceOption(rawValue: selectedAppearance)?.colorScheme)
+            .environment(\.horizontalSizeClass, .compact)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(.primary)
+                    .frame(height: 1)
+                    .offset(y: -50)
+            }
+            .onAppear {
+                setupTabBarAppearance()
+            }
+            .alert("Do you want to send feedback?", isPresented: $showConfirmationAlert) {
+                Button("Yes") {
+                    if MFMailComposeViewController.canSendMail() {
+                        showFeedbackForm = true
+                    } else {
+                        showMailUnavailableAlert = true
+                    }
+                }
+                Button("No", role: .cancel) {}
+            }
+            .sheet(isPresented: $showFeedbackForm) {
+                FeedbackView(subject: "Feedback", recipient: "unupsetdeveloper@gmail.com")
+                    .onAppear{
+                        NotificationCenter.default.post(name: .timerStop, object: nil)
+                    }
+            }
+            .alert(isPresented: $showMailUnavailableAlert) {
+                Alert(title: Text("Error"),
+                      message: Text("The email client is currently unavailable. Please ensure that you have a mail app installed."),
+                      dismissButton: .default(Text("ОК")))
+            }
+            .onChange(of: motionManager.isShaken) { isShaken in
+                if isShaken{
+                    showConfirmationAlert = true
+                    print("has Shaken", showConfirmationAlert)
+                }
+                motionManager.isShaken = false
+            }
         }
     }
     
