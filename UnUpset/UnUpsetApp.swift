@@ -35,14 +35,8 @@ struct UnUpsetApp: App {
         }
         .onChange(of: phase) { newPhase in
             switch newPhase {
-            case .background:
-                TimerViewModel.shared.saveBackgroundTime() // Сохраняем время ухода в background
-            case .inactive:
-                TimerViewModel.shared.saveInactiveTime() // Сохраняем время ухода в inactive
             case .active:
-                if TimerViewModel.shared.isActive {
-                    TimerViewModel.shared.updateFromInactiveOrBackground() // Обновляем состояние таймера
-                }
+                TimerViewModel.shared.loadState() // Обновляем состояние таймера
             default:
                 break
             }

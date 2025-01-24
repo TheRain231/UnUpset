@@ -9,6 +9,6 @@ import BackgroundTasks
     
 func scheduleAppRefresh() {
     let request = BGAppRefreshTaskRequest(identifier: "removeLimit")
-    request.earliestBeginDate = .now.addingTimeInterval(TimeInterval(TimerViewModel.shared.secondsLeft))
+    request.earliestBeginDate = .now.addingTimeInterval(TimeInterval(TimerViewModel.shared.remainingTime))
     try? BGTaskScheduler.shared.submit(request)
 }

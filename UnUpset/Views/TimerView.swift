@@ -26,11 +26,8 @@ struct TimerView: View {
                 playButton
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .onReceive(vm.timer) { (_) in
-                vm.cycle()
-            }
             .onReceive(NotificationCenter.default.publisher(for: .timerStop)) { _ in
-                vm.pause()
+                vm.stopTimer()
             }
             .onChange(of: vm.isActive) { newValue in
                 if !newValue{
@@ -38,12 +35,15 @@ struct TimerView: View {
                     manager.unshieldActivities()
                 }
             }
+            .task {
+                vm.loadState()
+            }
         }
     }
     
     var playButton: some View {
         Button {
-            vm.startButtonAction()
+            vm.startTimer()
             manager.shieldActivities()
         } label: {
             Image(systemName: "play.fill")
@@ -51,7 +51,7 @@ struct TimerView: View {
                 .padding()
         }
         .buttonStyle(PlayButtonStyle(isActive: vm.isActive))
-        .animation(.smooth, value: vm.secondsLeft)
+        .animation(.smooth, value: vm.remainingTime)
     }
     
     @ViewBuilder
@@ -93,7 +93,7 @@ struct TimerView: View {
                 .foregroundColor(Color("FirstColor"))
                 .rotationEffect(Angle(degrees: 270))
         }
-        .animation(.snappy(duration: 1.0), value: vm.progress)
+        .animation(.linear(duration: 1.0), value: vm.progress)
     }
 }
 
