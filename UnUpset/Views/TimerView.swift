@@ -72,6 +72,7 @@ struct TimerView: View {
         }
     }
     
+    
     var progressView: some View {
         ZStack {
             // Secondary circle
@@ -93,7 +94,7 @@ struct TimerView: View {
                 .foregroundColor(Color("FirstColor"))
                 .rotationEffect(Angle(degrees: 270))
         }
-        .animation(.linear(duration: 1.0), value: vm.progress)
+        .animation(vm.isFirstAppearance ? nil : .linear(duration: 1.0), value: vm.progress)
     }
 }
 

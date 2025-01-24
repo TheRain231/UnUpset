@@ -16,6 +16,7 @@ final class TimerViewModel: ObservableObject {
     @Published var remainingTime: TimeInterval = 5 * 60 // 5 минут
     @Published var progress: Double = 0.0
     @Published var isActive: Bool = false
+    @Published var isFirstAppearance: Bool = true
     
     private var timer: AnyCancellable?
     private let limit: TimeInterval = 5 * 60
@@ -29,8 +30,7 @@ final class TimerViewModel: ObservableObject {
             progress = 1.0 - (remainingTime / limit)
         }
         isActive = UserDefaults.standard.bool(forKey: userDefaultsKeyIsActive)
-        
-        print(isActive)
+        isFirstAppearance = true
         
         if isActive {
             resumeTimer() // Автоматически возобновляем таймер, если он активен
@@ -66,6 +66,7 @@ final class TimerViewModel: ObservableObject {
     }
     
     private func updateTimer() {
+        isFirstAppearance = false
         remainingTime -= remainingTime.truncatingRemainder(dividingBy: 1)
 
         if remainingTime > 0 {
