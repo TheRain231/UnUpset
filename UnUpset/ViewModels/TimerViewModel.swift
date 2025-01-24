@@ -10,7 +10,7 @@ import SwiftUI
 
 final class TimerViewModel: ObservableObject {
     static let shared = TimerViewModel()
-    
+
     // MARK: Properties
     @Published private(set) var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @Published private(set) var isActive: Bool = false
@@ -21,22 +21,20 @@ final class TimerViewModel: ObservableObject {
             self.progress = CGFloat(self.count) / CGFloat(limit)
         }
     }
-    
     @Published private(set) var secondsLeft: Int = 0
     let limit: Int = 5 * 60
-    @Published var leftTime: Date = Date()
-    
+
     private let userDefaults = UserDefaults.standard
-    private let savedTimeKey = "leftTime"
-    private let savedCountKey = "count"
-    private let isActiveKey = "isActive"
-    
+    private let backgroundTimeKey = "backgroundTimeKey"
+    private let inactiveTimeKey = "inactiveTimeKey"
+    private let savedCountKey = "countKey"
+    private let isActiveKey = "isActiveKey"
+
     // MARK: Init
     init() {
         loadState()
-        self.secondsLeft = max(self.limit - self.count, 0)
     }
-    
+
     // MARK: Functions
     func cycle() {
         if self.isActive {
@@ -47,7 +45,7 @@ final class TimerViewModel: ObservableObject {
             }
         }
     }
-    
+
     func pause() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["TIMER"])
         self.isActive = false
@@ -55,7 +53,7 @@ final class TimerViewModel: ObservableObject {
         self.secondsLeft = self.limit
         saveState()
     }
-    
+
     func startButtonAction() {
         if !self.isActive {
             if self.count >= limit {
@@ -63,17 +61,16 @@ final class TimerViewModel: ObservableObject {
                 self.progress = 0
             }
             self.isActive = true
-            performNotification()
             saveState()
         }
     }
-    
+
     func restartButtonAction() {
         self.count = 0
         self.progress = 0
         saveState()
     }
-    
+
     func addTime(_ time: Int) {
         if time >= 0 {
             withAnimation {
@@ -84,24 +81,43 @@ final class TimerViewModel: ObservableObject {
         }
         saveState()
     }
-    
+
+    // Сохранение времени ухода в background
+    func saveBackgroundTime() {
+        userDefaults.set(Date(), forKey: backgroundTimeKey)
+    }
+
+    // Сохранение времени ухода в inactive
+    func saveInactiveTime() {
+        userDefaults.set(Date(), forKey: inactiveTimeKey)
+    }
+
+    // Обновление времени при возврате из background или inactive
+    func updateFromInactiveOrBackground() {
+        let now = Date()
+
+        if let inactiveTime = userDefaults.object(forKey: inactiveTimeKey) as? Date {
+            let elapsedTime = Int(now.timeIntervalSince(inactiveTime))
+            addTime(elapsedTime)
+            userDefaults.removeObject(forKey: inactiveTimeKey) // Очистка, чтобы не учитывать повторно
+        }
+
+        if let backgroundTime = userDefaults.object(forKey: backgroundTimeKey) as? Date {
+            let elapsedTime = Int(now.timeIntervalSince(backgroundTime))
+            addTime(elapsedTime)
+            userDefaults.removeObject(forKey: backgroundTimeKey) // Очистка, чтобы не учитывать повторно
+        }
+    }
+
     private func saveState() {
-        userDefaults.set(Date(), forKey: savedTimeKey)
         userDefaults.set(count, forKey: savedCountKey)
         userDefaults.set(isActive, forKey: isActiveKey)
     }
-    
+
     private func loadState() {
-        if let savedDate = userDefaults.object(forKey: savedTimeKey) as? Date {
-            leftTime = savedDate
-            let elapsedTime = Int(Date().timeIntervalSince(savedDate))
-            
-            if let savedCount = userDefaults.value(forKey: savedCountKey) as? Int {
-                count = savedCount + (isActive ? elapsedTime : 0)
-            }
-        }
-        isActive = userDefaults.bool(forKey: isActiveKey)
-        self.secondsLeft = max(self.limit - self.count, 0) // Обновляем оставшееся время
+        self.count = userDefaults.integer(forKey: savedCountKey)
+        self.isActive = userDefaults.bool(forKey: isActiveKey)
+        self.secondsLeft = max(self.limit - self.count, 0)
     }
     
     // MARK: UI helpers

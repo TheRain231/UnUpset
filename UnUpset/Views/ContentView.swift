@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var showMailUnavailableAlert = false
     
     var body: some View {
+        
         if #available(iOS 18.0, *) {
             TabView {
                 Tab("Timer", systemImage: "timer") {
@@ -36,45 +37,12 @@ struct ContentView: View {
                         ShieldView(manager: manager)
                     }
                 }
-                
             }
-            .preferredColorScheme(AppearanceOption(rawValue: selectedAppearance)?.colorScheme)
-            .environment(\.horizontalSizeClass, .compact)
-            .overlay(alignment: .bottom) {
-                Rectangle()
-                    .fill(.primary)
-                    .frame(height: 1)
-                    .offset(y: -50)
-            }
-            .onAppear {
-                setupTabBarAppearance()
-            }
-            .alert("Do you want to send feedback?", isPresented: $showConfirmationAlert) {
-                Button("Yes") {
-                    NotificationCenter.default.post(name: .timerStop, object: nil)
-                    if MFMailComposeViewController.canSendMail() {
-                        showFeedbackForm = true
-                    } else {
-                        showMailUnavailableAlert = true
-                    }
-                }
-                Button("No", role: .cancel) {}
-            }
-            .sheet(isPresented: $showFeedbackForm) {
-                FeedbackView(subject: "Feedback", recipient: "unupsetdeveloper@gmail.com")
-            }
-            .alert(isPresented: $showMailUnavailableAlert) {
-                Alert(title: Text("Error"),
-                      message: Text("The email client is currently unavailable. Please ensure that you have a mail app installed."),
-                      dismissButton: .default(Text("ОК")))
-            }
-            .onChange(of: motionManager.isShaken) { _, isShaken in
-                if isShaken{
-                    showConfirmationAlert = true
-                    print("has Shaken", showConfirmationAlert)
-                }
-                motionManager.isShaken = false
-            }
+            .applyTabViewStyle(manager: manager, motionManager: motionManager,
+                               selectedAppearance: $selectedAppearance,
+                               showFeedbackForm: $showFeedbackForm,
+                               showConfirmationAlert: $showConfirmationAlert,
+                               showMailUnavailableAlert: $showMailUnavailableAlert)
         } else {
             TabView {
                 ZStack {
@@ -96,57 +64,77 @@ struct ContentView: View {
                           systemImage: "gear")
                 }
             }
-            .preferredColorScheme(AppearanceOption(rawValue: selectedAppearance)?.colorScheme)
-            .environment(\.horizontalSizeClass, .compact)
-            .overlay(alignment: .bottom) {
-                Rectangle()
-                    .fill(.primary)
-                    .frame(height: 1)
-                    .offset(y: -50)
-            }
-            .onAppear {
-                setupTabBarAppearance()
-            }
-            .alert("Do you want to send feedback?", isPresented: $showConfirmationAlert) {
-                Button("Yes") {
-                    if MFMailComposeViewController.canSendMail() {
-                        showFeedbackForm = true
-                    } else {
-                        showMailUnavailableAlert = true
-                    }
+            .applyTabViewStyle(manager: manager, motionManager: motionManager,
+                               selectedAppearance: $selectedAppearance,
+                               showFeedbackForm: $showFeedbackForm,
+                               showConfirmationAlert: $showConfirmationAlert,
+                               showMailUnavailableAlert: $showMailUnavailableAlert)
+        }
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func applyTabViewStyle(manager: ShieldManager,
+                           motionManager: MotionManager,
+                           selectedAppearance: Binding<Int>,
+                           showFeedbackForm: Binding<Bool>,
+                           showConfirmationAlert: Binding<Bool>,
+                           showMailUnavailableAlert: Binding<Bool>) -> some View {
+        if #available(iOS 18.0, *) {
+            self
+        } else {
+            self
+                .preferredColorScheme(AppearanceOption(rawValue: selectedAppearance.wrappedValue)?.colorScheme)
+                .environment(\.horizontalSizeClass, .compact)
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(.primary)
+                        .frame(height: 1)
+                        .offset(y: -50)
                 }
-                Button("No", role: .cancel) {}
-            }
-            .sheet(isPresented: $showFeedbackForm) {
-                FeedbackView(subject: "Feedback", recipient: "unupsetdeveloper@gmail.com")
-                    .onAppear{
-                        NotificationCenter.default.post(name: .timerStop, object: nil)
-                    }
-            }
-            .alert(isPresented: $showMailUnavailableAlert) {
-                Alert(title: Text("Error"),
-                      message: Text("The email client is currently unavailable. Please ensure that you have a mail app installed."),
-                      dismissButton: .default(Text("ОК")))
-            }
-            .onChange(of: motionManager.isShaken) { isShaken in
-                if isShaken{
-                    showConfirmationAlert = true
-                    print("has Shaken", showConfirmationAlert)
+                .onAppear {
+                    setupTabBarAppearance()
                 }
-                motionManager.isShaken = false
-            }
+                .alert("Do you want to send feedback?", isPresented: showConfirmationAlert) {
+                    Button("Yes") {
+                        if MFMailComposeViewController.canSendMail() {
+                            showFeedbackForm.wrappedValue = true
+                        } else {
+                            showMailUnavailableAlert.wrappedValue = true
+                        }
+                    }
+                    Button("No", role: .cancel) {}
+                }
+                .sheet(isPresented: showFeedbackForm) {
+                    FeedbackView(subject: "Feedback", recipient: "unupsetdeveloper@gmail.com")
+                        .onAppear {
+                            NotificationCenter.default.post(name: .timerStop, object: nil)
+                        }
+                }
+                .alert(isPresented: showMailUnavailableAlert) {
+                    Alert(title: Text("Error"),
+                          message: Text("The email client is currently unavailable. Please ensure that you have a mail app installed."),
+                          dismissButton: .default(Text("OK")))
+                }
+                .onChange(of: motionManager.isShaken) { isShaken in
+                    if isShaken {
+                        showConfirmationAlert.wrappedValue = true
+                        print("has Shaken", showConfirmationAlert.wrappedValue)
+                    }
+                    motionManager.isShaken = false
+                }
         }
     }
     
     func setupTabBarAppearance() {
         let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground() // Sets an opaque background color
+        appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(named: "BackgroundColor")
-        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(named: "AccentColor") // Color for selected tab icons
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(named: "AccentColor")!]  // Color for selected tab text
-        
-        appearance.stackedLayoutAppearance.disabled.iconColor = UIColor(named: "ButtonActive") // Color for disabled tab icons
-        appearance.stackedLayoutAppearance.disabled.titleTextAttributes = [.foregroundColor: UIColor(named: "ButtonActive")!] // Color for disabled tab text
+        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(named: "AccentColor")
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(named: "AccentColor")!]
+        appearance.stackedLayoutAppearance.disabled.iconColor = UIColor(named: "unupsetGray")
+        appearance.stackedLayoutAppearance.disabled.titleTextAttributes = [.foregroundColor: UIColor(named: "unupsetGray")!]
         
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance

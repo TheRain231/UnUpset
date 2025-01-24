@@ -16,52 +16,26 @@ struct TimerView: View {
         GeometryReader { proxy in
             let size = proxy.size
             
-            if #available(iOS 17.0, *) {
-                VStack{
-                    ZStack{
-                        progressView
-                            .frame(width: size.height * 0.37,
-                                   height: size.height * 0.37)
-                        countDown(fontSize: size.height * 0.128)
-                    }
-                    playButton
+            VStack{
+                ZStack{
+                    progressView
+                        .frame(width: size.height * 0.37,
+                               height: size.height * 0.37)
+                    countDown(fontSize: size.height * 0.128)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onReceive(vm.timer) { (_) in
-                    vm.cycle()
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .timerStop)) { _ in
-                    vm.pause()
-                }
-                
-                .onChange(of: vm.isActive) { oldValue, _ in
-                    if oldValue{
-                        HapticEngine.shared.playXY()
-                        manager.unshieldActivities()
-                    }
-                }
-            } else {
-                VStack{
-                    ZStack{
-                        progressView
-                            .frame(width: size.height * 0.37,
-                                   height: size.height * 0.37)
-                        countDown(fontSize: size.height * 0.128)
-                    }
-                    playButton
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onReceive(vm.timer) { (_) in
-                    vm.cycle()
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .timerStop)) { _ in
-                    vm.pause()
-                }
-                .onChange(of: vm.isActive) { newValue in
-                    if !newValue{
-                        HapticEngine.shared.playXY()
-                        manager.unshieldActivities()
-                    }
+                playButton
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onReceive(vm.timer) { (_) in
+                vm.cycle()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .timerStop)) { _ in
+                vm.pause()
+            }
+            .onChange(of: vm.isActive) { newValue in
+                if !newValue{
+                    HapticEngine.shared.playXY()
+                    manager.unshieldActivities()
                 }
             }
         }
@@ -128,7 +102,8 @@ struct PlayButtonStyle: ButtonStyle {
     
     func makeBody(configuration: Self.Configuration) -> some View {
         configuration.label
-            .foregroundStyle(Color(isActive ? "ButtonActive" : "ButtonInactive"))
+            .foregroundStyle(Color("ButtonInactive"))
+            .opacity(isActive ? 0.33 : 1)
     }
 }
 

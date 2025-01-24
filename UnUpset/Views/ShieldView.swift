@@ -18,6 +18,8 @@ struct ShieldView: View {
     
     @AppStorage("selectedAppearance") var selectedAppearance = AppearanceOption.auto.rawValue
     
+    @State private var notifications = NotificationManager.shared.notificationsEnabled
+    
     var body: some View {
         VStack(spacing: 11) {
             profile
@@ -59,14 +61,22 @@ struct ShieldView: View {
     
     var settings: some View{
         VStack(spacing: 0) {
-            Toggle(isOn: NotificationManager.shared.$notificationsEnabled) {
+            Toggle(isOn: $notifications) {
                 Text("Reminders")
                     .padding(.vertical, 11)
             }
             .tint(Color("FirstColor"))
             .padding(.horizontal, 16)
+            .onChange(of: notifications) { newValue in
+                if notifications{
+                    NotificationManager.shared.enableNotifications()
+                } else {
+                    NotificationManager.shared.disableNotifications()
+                }
+            }
             
             Divider()
+                .overlay(Color("unupsetGray"))
                 .padding(.horizontal, 16)
             HStack {
                 Text("Appearance")

@@ -12,15 +12,7 @@ import SwiftUI
 class NotificationManager {
     static let shared = NotificationManager()
     
-    @AppStorage("notificationsEnabled") var notificationsEnabled: Bool = true {
-        didSet {
-            if notificationsEnabled {
-                enableNotifications()
-            } else {
-                disableNotifications()
-            }
-        }
-    }
+    @AppStorage("notificationsEnabled") var notificationsEnabled: Bool = true
     
     func requestNotificationAuthorization() {
         let center = UNUserNotificationCenter.current()
@@ -81,15 +73,44 @@ class NotificationManager {
     }
     
     func enableNotifications() {
+        notificationsEnabled = true
         requestNotificationAuthorization()
         scheduleNotifications()
         print("Notifications have been enabled.")
     }
     
     func disableNotifications() {
-        let notificationCenter = UNUserNotificationCenter.current()
-        notificationCenter.removePendingNotificationRequests(withIdentifiers: ["DailyReminder10", "DailyReminder13", "DailyReminder16", "DailyReminder19"])
-        notificationCenter.removeAllDeliveredNotifications()
-        print("Notifications have been disabled.")
+        notificationsEnabled = false
+
+        Task {
+            let dailyReminderIdentifiers = await getPendingNotifications().filter { $0.starts(with: "DailyReminder") }
+            
+            let notificationCenter = UNUserNotificationCenter.current()
+            notificationCenter.removePendingNotificationRequests(withIdentifiers: dailyReminderIdentifiers)
+            notificationCenter.removeAllDeliveredNotifications()
+            
+            print("Notifications have been disabled.")
+        }
+    }
+    
+    private func getPendingNotifications() async -> [String] {
+        await withCheckedContinuation { continuation in
+            UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+                let identifiers = requests.map { $0.identifier }
+                continuation.resume(returning: identifiers)
+            }
+        }
+    }
+    
+    private func printPendingNotifications() {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            for request in requests {
+                print("Идентификатор: \(request.identifier)")
+                print("Контент заголовка: \(request.content.title)")
+                print("Контент тела: \(request.content.body)")
+                print("Триггер: \(String(describing: request.trigger))")
+                print("------")
+            }
+        }
     }
 }

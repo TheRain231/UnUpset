@@ -36,16 +36,15 @@ struct UnUpsetApp: App {
         .onChange(of: phase) { newPhase in
             switch newPhase {
             case .background:
-                scheduleAppRefresh()
-                
-                TimerViewModel.shared.leftTime = Date()
+                TimerViewModel.shared.saveBackgroundTime() // Сохраняем время ухода в background
+            case .inactive:
+                TimerViewModel.shared.saveInactiveTime() // Сохраняем время ухода в inactive
             case .active:
                 if TimerViewModel.shared.isActive {
-                    let diff = Int(Date().timeIntervalSince(TimerViewModel.shared.leftTime))
-                    
-                    TimerViewModel.shared.addTime(diff)
+                    TimerViewModel.shared.updateFromInactiveOrBackground() // Обновляем состояние таймера
                 }
-            default: break
+            default:
+                break
             }
         }
         .backgroundTask(.appRefresh("removeLimit")) { _ in
