@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct TimerView: View {
-    @ObservedObject var manager: ShieldManager
-    @ObservedObject var vm: TimerViewModel = TimerViewModel.shared
+    @ObservedObject var shieldManager = ShieldManager.shared
+    @ObservedObject var vm = TimerView.ViewModel()
     private let lineWidth: CGFloat = 24.0
     
     var body: some View {
@@ -26,13 +26,17 @@ struct TimerView: View {
                 playButton
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color("BackgroundColor"))
             .onReceive(NotificationCenter.default.publisher(for: .timerStop)) { _ in
                 vm.stopTimer()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .loadState), perform: { _ in
+                vm.loadState()
+            })
             .onChange(of: vm.isActive) { newValue in
                 if !newValue{
                     HapticEngine.shared.playXY()
-                    manager.unshieldActivities()
+                    shieldManager.unshieldActivities()
                 }
             }
             .task {
@@ -44,7 +48,7 @@ struct TimerView: View {
     var playButton: some View {
         Button {
             vm.startTimer()
-            manager.shieldActivities()
+            shieldManager.shieldActivities()
         } label: {
             Image(systemName: "play.fill")
                 .font(.system(size: 70))
@@ -109,5 +113,5 @@ struct PlayButtonStyle: ButtonStyle {
 }
 
 #Preview {
-    ContentView(manager: ShieldManager())
+    ContentView()
 }

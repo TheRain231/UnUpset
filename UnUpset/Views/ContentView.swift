@@ -9,7 +9,7 @@ import SwiftUI
 import MessageUI
 
 struct ContentView: View {
-    @ObservedObject var manager: ShieldManager
+    @ObservedObject var shieldManager = ShieldManager.shared
     @StateObject private var motionManager = MotionManager()
     @AppStorage("selectedAppearance") var selectedAppearance = AppearanceOption.auto.rawValue
     @Environment(\.colorScheme) var systemColorScheme
@@ -19,52 +19,34 @@ struct ContentView: View {
     @State private var showMailUnavailableAlert = false
     
     var body: some View {
-        
         if #available(iOS 18.0, *) {
             TabView {
                 Tab("Timer", systemImage: "timer") {
-                    ZStack {
-                        Color("BackgroundColor")
-                            .ignoresSafeArea()
-                        TimerView(manager: manager)
-                    }
+                    TimerView()
                 }
-                
                 Tab("Settings", systemImage: "gear") {
-                    ZStack {
-                        Color("BackgroundColor")
-                            .ignoresSafeArea()
-                        ShieldView(manager: manager)
-                    }
+                    ShieldView()
                 }
             }
-            .applyTabViewStyle(manager: manager, motionManager: motionManager,
+            .applyTabViewStyle(shieldManager: shieldManager, motionManager: motionManager,
                                selectedAppearance: $selectedAppearance,
                                showFeedbackForm: $showFeedbackForm,
                                showConfirmationAlert: $showConfirmationAlert,
                                showMailUnavailableAlert: $showMailUnavailableAlert)
         } else {
             TabView {
-                ZStack {
-                    Color("BackgroundColor")
-                        .ignoresSafeArea()
-                    TimerView(manager: manager)
-                }
-                .tabItem {
-                    Label("Timer",
-                          systemImage: "timer")
-                }
-                ZStack {
-                    Color("BackgroundColor")
-                        .ignoresSafeArea()
-                    ShieldView(manager: manager)
-                }
-                .tabItem {
-                    Label("Settings",
-                          systemImage: "gear")
-                }
+                TimerView()
+                    .tabItem {
+                        Label("Timer",
+                              systemImage: "timer")
+                    }
+                ShieldView()
+                    .tabItem {
+                        Label("Settings",
+                              systemImage: "gear")
+                    }
             }
-            .applyTabViewStyle(manager: manager, motionManager: motionManager,
+            .applyTabViewStyle(shieldManager: shieldManager, motionManager: motionManager,
                                selectedAppearance: $selectedAppearance,
                                showFeedbackForm: $showFeedbackForm,
                                showConfirmationAlert: $showConfirmationAlert,
@@ -75,7 +57,7 @@ struct ContentView: View {
 
 extension View {
     @ViewBuilder
-    func applyTabViewStyle(manager: ShieldManager,
+    func applyTabViewStyle(shieldManager: ShieldManager,
                            motionManager: MotionManager,
                            selectedAppearance: Binding<Int>,
                            showFeedbackForm: Binding<Bool>,
@@ -140,5 +122,5 @@ func setupTabBarAppearance() {
 }
 
 #Preview {
-    ContentView(manager: ShieldManager())
+    ContentView()
 }

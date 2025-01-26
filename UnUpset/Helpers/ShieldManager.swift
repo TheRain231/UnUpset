@@ -11,6 +11,8 @@ import FamilyControls
 import ManagedSettings
 
 class ShieldManager: ObservableObject {
+    static let shared = ShieldManager()
+    
     @Published var discouragedSelections = FamilyActivitySelection()
     
     private let store = ManagedSettingsStore()

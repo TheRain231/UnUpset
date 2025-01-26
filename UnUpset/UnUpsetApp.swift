@@ -10,7 +10,6 @@ import FamilyControls
 
 @main
 struct UnUpsetApp: App {
-    @StateObject private var manager = ShieldManager()
     @Environment(\.scenePhase) private var phase
     
     init(){
@@ -22,7 +21,7 @@ struct UnUpsetApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView(manager: manager)
+            ContentView()
                 .onAppear {
                     Task{
                         do {
@@ -36,13 +35,17 @@ struct UnUpsetApp: App {
         .onChange(of: phase) { newPhase in
             switch newPhase {
             case .active:
-                TimerViewModel.shared.loadState() // Обновляем состояние таймера
+                NotificationCenter.default.post(name: .loadState, object: nil) // Обновляем состояние таймера
             default:
                 break
             }
         }
-        .backgroundTask(.appRefresh("removeLimit")) { _ in
-            await manager.unshieldActivities()
-        }
+//        .backgroundTask(.appRefresh("removeLimit")) { _ in
+//            await manager.unshieldActivities()
+//        }
     }
+}
+
+extension Notification.Name {
+    static let loadState = Notification.Name("loadState")
 }
