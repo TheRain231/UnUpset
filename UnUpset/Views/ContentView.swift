@@ -88,7 +88,7 @@ extension View {
             .sheet(isPresented: showFeedbackForm) {
                 FeedbackView(subject: "Feedback", recipient: "unupsetdeveloper@gmail.com")
                     .onAppear {
-                        NotificationCenter.default.post(name: .timerStop, object: nil)
+                        TimerManager.shared.stopTimer()
                     }
             }
             .alert(isPresented: showMailUnavailableAlert) {

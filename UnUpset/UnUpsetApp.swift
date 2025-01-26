@@ -14,7 +14,9 @@ struct UnUpsetApp: App {
     
     init(){
         NotificationManager.shared.requestNotificationAuthorization()
-        NotificationManager.shared.scheduleNotifications()        
+        NotificationManager.shared.scheduleNotifications()
+        
+        TimerManager.shared.loadState()
     }
     
     let center = AuthorizationCenter.shared
@@ -35,7 +37,8 @@ struct UnUpsetApp: App {
         .onChange(of: phase) { newPhase in
             switch newPhase {
             case .active:
-                NotificationCenter.default.post(name: .loadState, object: nil) // Обновляем состояние таймера
+                TimerManager.shared.loadState() // Обновляем состояние таймера
+                NotificationCenter.default.post(name: .appOpened, object: nil)
             default:
                 break
             }
@@ -47,5 +50,5 @@ struct UnUpsetApp: App {
 }
 
 extension Notification.Name {
-    static let loadState = Notification.Name("loadState")
+    static let appOpened = Notification.Name("appOpened")
 }
