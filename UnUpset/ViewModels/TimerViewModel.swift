@@ -73,12 +73,3 @@ extension TimerView {
         }
     }
 }
-
-struct charItem: Identifiable{
-    let symbol: String
-    let id = UUID()
-    
-    init(_ symbol: Character) {
-        self.symbol = String(symbol)
-    }
-}

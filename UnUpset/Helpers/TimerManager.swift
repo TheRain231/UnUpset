@@ -11,34 +11,29 @@ import Combine
 
 final class TimerManager: ObservableObject {
     static let shared = TimerManager()
-    
+        
     // MARK: Properties
-    @Published var remainingTime: TimeInterval = 5 * 60 // 5 минут
+    @Published var remainingTime: TimeInterval // 5 минут
     @Published var progress: Double = 0.0
     @Published var isActive: Bool = false
     
+    let limit: TimeInterval = 5 * 60 // 5 минут
+    
     private var timer: AnyCancellable?
-    private let limit: TimeInterval = 5 * 60
     private let userDefaultsKeyStartDate = "TimerStartDate"
     private let userDefaultsKeyIsActive = "TimerIsActive"
+    private let sharedDefaults = UserDefaults(suiteName: "group.UnUpsetDeveloper.UnUpset")
     
-    func loadState() {
-        if let startDate = UserDefaults.standard.object(forKey: userDefaultsKeyStartDate) as? Date {
-            let elapsedTime = Date().timeIntervalSince(startDate)
-            remainingTime = max(limit - elapsedTime, 0)
-            progress = 1.0 - (remainingTime / limit)
-        }
-        isActive = UserDefaults.standard.bool(forKey: userDefaultsKeyIsActive)
-        
-        if isActive {
-            resumeTimer() // Автоматически возобновляем таймер, если он активен
-        }
+    // MARK: Functions
+    init() {
+        remainingTime = limit
     }
     
     func startTimer() {
         guard !isActive else { return } // Избегаем повторного запуска
+        timer?.cancel() // Отмена предыдущего таймера
         saveState(isActive: true)
-        performNotification()
+        NotificationManager.shared.performNotification()
         timer = Timer.publish(every: 1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
@@ -57,7 +52,7 @@ final class TimerManager: ObservableObject {
     }
     
     func stopTimer() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["TIMER"])
+        NotificationManager.shared.removePendingNotification()
         saveState(isActive: false)
         timer?.cancel()
         HapticEngine.shared.playXY()
@@ -76,35 +71,33 @@ final class TimerManager: ObservableObject {
         }
     }
     
-    private func saveState(isActive: Bool) {
-        self.isActive = isActive
-        UserDefaults.standard.set(isActive, forKey: userDefaultsKeyIsActive)
+    func resetTimer() {
+        remainingTime = limit
+        progress = 0.0
+        sharedDefaults?.removeObject(forKey: userDefaultsKeyStartDate)
+        sharedDefaults?.set(false, forKey: userDefaultsKeyIsActive)
+    }
+    
+    // MARK: Memory 
+    func loadState() {
+        if let startDate = sharedDefaults?.object(forKey: userDefaultsKeyStartDate) as? Date {
+            let elapsedTime = Date().timeIntervalSince(startDate)
+            remainingTime = max(limit - elapsedTime, 0)
+            progress = 1.0 - (remainingTime / limit)
+        }
+        isActive = sharedDefaults?.bool(forKey: userDefaultsKeyIsActive) ?? false
+        
         if isActive {
-            let startDate = Date()
-            UserDefaults.standard.set(startDate, forKey: userDefaultsKeyStartDate)
+            resumeTimer()
         }
     }
     
-    private func resetTimer() {
-        remainingTime = limit
-        progress = 0.0
-        UserDefaults.standard.removeObject(forKey: userDefaultsKeyStartDate)
-        UserDefaults.standard.set(false, forKey: userDefaultsKeyIsActive)
-    }
-    
-    private func performNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "You did it!"
-        content.body = "Open the app to unlock your phone"
-        
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(self.limit), repeats: false)
-        
-        let request = UNNotificationRequest(identifier: "TIMER", content: content, trigger: trigger)
-        
-        UNUserNotificationCenter.current().add(request) { error in
-            if error != nil {
-                print(error?.localizedDescription ?? "")
-            }
+    func saveState(isActive: Bool) {
+        self.isActive = isActive
+        sharedDefaults?.set(isActive, forKey: userDefaultsKeyIsActive)
+        if isActive {
+            let startDate = Date()
+            sharedDefaults?.set(startDate, forKey: userDefaultsKeyStartDate)
         }
     }
 }

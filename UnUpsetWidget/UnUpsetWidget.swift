@@ -9,23 +9,23 @@ import WidgetKit
 import SwiftUI
 
 struct Provider: TimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), emoji: "😀")
+    func placeholder(in context: Context) -> TimerEntry {
+        TimerEntry(date: Date())
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), emoji: "😀")
+    func getSnapshot(in context: Context, completion: @escaping (TimerEntry) -> ()) {
+        let entry = TimerEntry(date: Date())
         completion(entry)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
+    func getTimeline(in context: Context, completion: @escaping (Timeline<TimerEntry>) -> ()) {
+        var entries: [TimerEntry] = []
 
         // Generate a timeline consisting of five entries an hour apart, starting from the current date.
         let currentDate = Date()
         for hourOffset in 0 ..< 5 {
             let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, emoji: "😀")
+            let entry = TimerEntry(date: entryDate)
             entries.append(entry)
         }
 
@@ -38,17 +38,16 @@ struct Provider: TimelineProvider {
 //    }
 }
 
-struct SimpleEntry: TimelineEntry {
-    let date: Date
-    let emoji: String
-}
-
 struct UnUpsetWidgetEntryView : View {
     var entry: Provider.Entry
 
     var body: some View {
-        Text("Hey")
+        TimerView()
     }
+}
+
+struct TimerEntry: TimelineEntry {
+    let date: Date
 }
 
 struct UnUpsetWidget: Widget {
@@ -58,20 +57,21 @@ struct UnUpsetWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 UnUpsetWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
+                    .containerBackground(Color("BackgroundColor"), for: .widget)
             } else {
                 UnUpsetWidgetEntryView(entry: entry)
                     .padding()
-                    .background()
+                    .background(Color("BackgroundColor"))
             }
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
+        .configurationDisplayName("Timer")
+        .description("Timer widget")
+        .supportedFamilies([.systemSmall])
     }
 }
 
 #Preview(as: .systemSmall) {
     UnUpsetWidget()
 } timeline: {
-    SimpleEntry(date: .now, emoji: "😀")
+    TimerEntry(date: .now)
 }

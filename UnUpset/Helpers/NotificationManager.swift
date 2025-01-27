@@ -72,6 +72,26 @@ class NotificationManager {
         }
     }
     
+    func performNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "You did it!"
+        content.body = "Open the app to unlock your phone"
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(TimerManager.shared.limit), repeats: false)
+        
+        let request = UNNotificationRequest(identifier: "TIMER", content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if error != nil {
+                print(error?.localizedDescription ?? "")
+            }
+        }
+    }
+    
+    func removePendingNotification() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["TIMER"])
+    }
+    
     func enableNotifications() {
         notificationsEnabled = true
         requestNotificationAuthorization()

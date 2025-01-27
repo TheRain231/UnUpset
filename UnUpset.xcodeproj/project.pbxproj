@@ -63,9 +63,20 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Assets.xcassets,
+				Helpers/CharItem.swift,
+				Helpers/HapticEngine.swift,
+				Helpers/NotificationManager.swift,
 				Helpers/ShieldManager.swift,
+				Helpers/TimerManager.swift,
 			);
 			target = 385729992D4673B90083A75D /* UnUpsetWidgetExtension */;
+		};
+		38BAC5412D479FFF00D84BE6 /* Exceptions for "UnUpsetWidget" folder in "UnUpset" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				PlayButtonActionIntent.swift,
+			);
+			target = 382579342CF0DACC00603A58 /* UnUpset */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -82,6 +93,7 @@
 		385729A02D4673B90083A75D /* UnUpsetWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				38BAC5412D479FFF00D84BE6 /* Exceptions for "UnUpsetWidget" folder in "UnUpset" target */,
 				385729AF2D4673BA0083A75D /* Exceptions for "UnUpsetWidget" folder in "UnUpsetWidgetExtension" target */,
 			);
 			path = UnUpsetWidget;
