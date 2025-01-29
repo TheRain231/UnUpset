@@ -16,9 +16,6 @@ class ShieldManager: ObservableObject {
     @Published var discouragedSelections = FamilyActivitySelection()
     
     private let store = ManagedSettingsStore()
-    private let sharedDefaults = UserDefaults(suiteName: "group.UnUpsetDeveloper.UnUpset")
-    private let savedApplicationsKey = "savedApplications"
-    private let savedCategoriesKey = "savedCategories"
     
     func shieldActivities() {
         // Очистка старых настроек
@@ -29,13 +26,13 @@ class ShieldManager: ObservableObject {
         var categories = discouragedSelections.categoryTokens
         
         if applications.isEmpty {
-            if let savedApplications = sharedDefaults?.object(forKey: savedApplicationsKey) as? [ApplicationToken] {
+            if let savedApplications = ShieldData.shared.savedApplications {
                 applications = Set(savedApplications) // Преобразуем массив в множество
             }
         }
         
         if categories.isEmpty {
-            if let savedCategories = sharedDefaults?.object(forKey: savedCategoriesKey) as? [ActivityCategoryToken] {
+            if let savedCategories = ShieldData.shared.savedCategories {
                 categories = Set(savedCategories) // Преобразуем массив в множество
             }
         }
@@ -48,8 +45,8 @@ class ShieldManager: ObservableObject {
     
     func saveDiscouragedSelections() {
         // Сохранение настроек в sharedDefaults
-        sharedDefaults?.set(Array(discouragedSelections.applicationTokens), forKey: savedApplicationsKey)
-        sharedDefaults?.set(Array(discouragedSelections.categoryTokens), forKey: savedCategoriesKey)
+        ShieldData.shared.savedApplications = Array(discouragedSelections.applicationTokens)
+        ShieldData.shared.savedCategories = Array(discouragedSelections.categoryTokens)
     }
     
     func unshieldActivities() {

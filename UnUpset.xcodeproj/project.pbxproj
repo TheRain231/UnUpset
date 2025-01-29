@@ -68,6 +68,8 @@
 				Helpers/NotificationManager.swift,
 				Helpers/ShieldManager.swift,
 				Helpers/TimerManager.swift,
+				Model/ShieldData.swift,
+				Model/TimerData.swift,
 			);
 			target = 385729992D4673B90083A75D /* UnUpsetWidgetExtension */;
 		};

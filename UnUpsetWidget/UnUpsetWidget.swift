@@ -10,44 +10,77 @@ import SwiftUI
 
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> TimerEntry {
-        TimerEntry(date: Date())
+        TimerEntry(date: Date(), remainingTime: TimerManager.shared.limit, isActive: false)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (TimerEntry) -> ()) {
-        let entry = TimerEntry(date: Date())
-        completion(entry)
+        let isActive = TimerData.shared.isActive
+        let remaining = isActive ?
+                                max(TimerManager.shared.limit - Date().timeIntervalSince(TimerData.shared.startDate!), 0)
+                                : TimerManager.shared.limit
+        
+        completion(TimerEntry(
+            date: Date(),
+            remainingTime: remaining,
+            isActive: isActive
+        ))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TimerEntry>) -> ()) {
-        var entries: [TimerEntry] = []
-
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
         let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = TimerEntry(date: entryDate)
-            entries.append(entry)
+        var entries: [TimerEntry] = []
+        let isActive = TimerData.shared.isActive
+        
+        if isActive, let startDate = TimerData.shared.startDate {
+            let totalTime = TimerManager.shared.limit - currentDate.timeIntervalSince(startDate)
+            
+            for second in 0...Int(totalTime) {
+                let entryDate = currentDate.addingTimeInterval(Double(second))
+                let remaining = max(TimerManager.shared.limit - (entryDate.timeIntervalSince(startDate)), 0)
+                entries.append(TimerEntry(
+                    date: entryDate,
+                    remainingTime: remaining,
+                    isActive: remaining > 0
+                ))
+            }
+            
+            // Добавляем финальное состояние
+            entries.append(TimerEntry(
+                date: currentDate.addingTimeInterval(totalTime),
+                remainingTime: 0,
+                isActive: false
+            ))
+        } else {
+            entries.append(TimerEntry(
+                date: currentDate,
+                remainingTime: TimerManager.shared.limit,
+                isActive: false
+            ))
         }
-
+        
         let timeline = Timeline(entries: entries, policy: .atEnd)
         completion(timeline)
     }
-
-//    func relevances() async -> WidgetRelevances<Void> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
 }
 
 struct UnUpsetWidgetEntryView : View {
     var entry: Provider.Entry
 
     var body: some View {
-        TimerView()
+        TimerView(entry: entry)
     }
 }
 
 struct TimerEntry: TimelineEntry {
     let date: Date
+    let remainingTime: TimeInterval
+    let isActive: Bool
+    
+    init(date: Date, remainingTime: TimeInterval, isActive: Bool) {
+        self.date = date
+        self.remainingTime = remainingTime
+        self.isActive = isActive
+    }
 }
 
 struct UnUpsetWidget: Widget {
@@ -73,5 +106,5 @@ struct UnUpsetWidget: Widget {
 #Preview(as: .systemSmall) {
     UnUpsetWidget()
 } timeline: {
-    TimerEntry(date: .now)
+    TimerEntry(date: .now, remainingTime: TimerManager.shared.limit, isActive: false)
 }

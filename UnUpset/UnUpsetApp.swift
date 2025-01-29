@@ -14,7 +14,10 @@ struct UnUpsetApp: App {
     
     init(){
         NotificationManager.shared.requestNotificationAuthorization()
-        NotificationManager.shared.scheduleNotifications()
+
+        if NotificationManager.shared.notificationsEnabled {
+            NotificationManager.shared.scheduleNotifications()
+        }
         
         TimerManager.shared.loadState()
     }

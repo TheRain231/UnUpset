@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import WidgetKit
 import SwiftUI
 import Combine
 
@@ -42,6 +43,7 @@ extension TimerView {
         func playButtonAction(){
             timerManager.startTimer()
             ShieldManager.shared.shieldActivities()
+            WidgetCenter.shared.reloadTimelines(ofKind: "UnUpsetWidget")
         }
         
         func loadState() {

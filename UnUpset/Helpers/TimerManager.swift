@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import WidgetKit
 
 final class TimerManager: ObservableObject {
     static let shared = TimerManager()
@@ -17,12 +18,9 @@ final class TimerManager: ObservableObject {
     @Published var progress: Double = 0.0
     @Published var isActive: Bool = false
     
-    let limit: TimeInterval = 5 * 60 // 5 минут
+    let limit: TimeInterval = 15 //5 * 60 // 5 минут
     
     private var timer: AnyCancellable?
-    private let userDefaultsKeyStartDate = "TimerStartDate"
-    private let userDefaultsKeyIsActive = "TimerIsActive"
-    private let sharedDefaults = UserDefaults(suiteName: "group.UnUpsetDeveloper.UnUpset")
     
     // MARK: Functions
     init() {
@@ -74,18 +72,20 @@ final class TimerManager: ObservableObject {
     func resetTimer() {
         remainingTime = limit
         progress = 0.0
-        sharedDefaults?.removeObject(forKey: userDefaultsKeyStartDate)
-        sharedDefaults?.set(false, forKey: userDefaultsKeyIsActive)
+        TimerData.shared.removeStartDate()
+        TimerData.shared.isActive = false
+        
+        WidgetCenter.shared.reloadTimelines(ofKind: "UnUpsetWidget")
     }
     
     // MARK: Memory 
     func loadState() {
-        if let startDate = sharedDefaults?.object(forKey: userDefaultsKeyStartDate) as? Date {
+        if let startDate = TimerData.shared.startDate {
             let elapsedTime = Date().timeIntervalSince(startDate)
             remainingTime = max(limit - elapsedTime, 0)
             progress = 1.0 - (remainingTime / limit)
         }
-        isActive = sharedDefaults?.bool(forKey: userDefaultsKeyIsActive) ?? false
+        isActive = TimerData.shared.isActive
         
         if isActive {
             resumeTimer()
@@ -94,10 +94,10 @@ final class TimerManager: ObservableObject {
     
     func saveState(isActive: Bool) {
         self.isActive = isActive
-        sharedDefaults?.set(isActive, forKey: userDefaultsKeyIsActive)
+        TimerData.shared.isActive = isActive
         if isActive {
             let startDate = Date()
-            sharedDefaults?.set(startDate, forKey: userDefaultsKeyStartDate)
+            TimerData.shared.startDate = startDate
         }
     }
 }

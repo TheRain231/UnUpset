@@ -11,7 +11,8 @@ import AppIntents
 
 
 struct TimerView: View {
-    @StateObject var vm = TimerView.ViewModel()
+    var entry: Provider.Entry
+
     private let lineWidth: CGFloat = 15.0
     
     var body: some View {
@@ -38,21 +39,21 @@ struct TimerView: View {
             Image(systemName: "play.fill")
                 .font(.system(size: fontSize))
         }
-        .buttonStyle(PlayButtonStyle(isActive: vm.isActive))
-        .animation(.smooth, value: vm.progress)
+        .buttonStyle(PlayButtonStyle(isActive: entry.isActive))
+        .animation(.smooth, value: entry.remainingTime)
     }
     
     @ViewBuilder
     func countDown(fontSize: CGFloat) -> some View {
         HStack(alignment: .center, spacing: 0) {
-            Text(vm.stringMinutes())
+            Text(stringMinutes())
                 .font(.system(size: fontSize, weight: .light))
                 .frame(width: fontSize * 0.6, alignment: .trailing)
             Text(":")
                 .font(.system(size: fontSize, weight: .light))
                 .offset(y: -fontSize * 0.1)
             //symbol: charItem, confirms to Identfiable
-            ForEach(vm.stringSeconds()) { symbol in
+            ForEach(stringSeconds()) { symbol in
                 Text(symbol.symbol)
                     .font(.system(size: fontSize, weight: .light))
                     .frame(width: fontSize * 0.6)
@@ -70,7 +71,7 @@ struct TimerView: View {
             
             // Main circle
             Circle()
-                .trim(from: 0.0, to: min(vm.progress, 1.0))
+                .trim(from: 0.0, to: min(1.0 - (entry.remainingTime / TimerManager.shared.limit), 1.0))
                 .stroke(style: StrokeStyle(lineWidth: lineWidth,
                                            lineCap: .round, lineJoin: .round))
                 .foregroundColor(Color("FirstColor"))
@@ -82,68 +83,22 @@ struct TimerView: View {
                 .foregroundColor(Color("FirstColor"))
                 .rotationEffect(Angle(degrees: 270))
         }
-        .animation(vm.isFirstAppearance ? nil : .linear(duration: 1.0), value: vm.progress)
+        .animation(.linear(duration: 1.0), value: entry.remainingTime)
     }
-}
-
-extension TimerView{
-    final class ViewModel: ObservableObject {
-        // MARK: Properties
-        @Published var isFirstAppearance: Bool = true
-        @ObservedObject var timerManager = TimerManager.shared
-        @Published var isActive: Bool = false
-        @Published var progress: CGFloat = 0.0
+    
+    func stringMinutes() -> String {
+        return String(format: "%01i", Int(entry.remainingTime) / 60)
+    }
+    
+    func stringSeconds() -> [charItem] {
+        var arr: [charItem] = []
+        let secondsInString = String(format: "%02i", Int(entry.remainingTime) % 60, 0)
         
-        private var cancellableOnProgress: AnyCancellable?
-        private var cancellableOnOpen: AnyCancellable?
-
-        init() {
-            timerManager.$isActive
-                .assign(to: &$isActive) // Автоматически связывает значения
-            timerManager.$progress
-                .map { CGFloat($0) }
-                .assign(to: &$progress)
-            cancellableOnProgress = timerManager.$progress // Подписывается на обновления progress
-                .sink { [weak self] newValue in
-                    self?.isFirstAppearance = false
-                    self?.cancellableOnProgress?.cancel()
-                }
+        for symb in secondsInString {
+            arr.append(charItem(symb))
         }
         
-        
-        // MARK: Functions
-        func playButtonAction(){
-            timerManager.startTimer()
-            ShieldManager.shared.shieldActivities()
-        }
-        
-        func loadState() {
-            self.isFirstAppearance = true
-            timerManager.loadState()
-            cancellableOnProgress = timerManager.$progress
-                .sink { [weak self] newValue in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        self?.isFirstAppearance = false
-                    }
-                    self?.cancellableOnProgress?.cancel()
-                }
-        }
-        
-        // MARK: UI helpers
-        func stringMinutes() -> String {
-            return String(format: "%01i", Int(timerManager.remainingTime) / 60)
-        }
-        
-        func stringSeconds() -> [charItem] {
-            var arr: [charItem] = []
-            let secondsInString = String(format: "%02i", Int(timerManager.remainingTime) % 60, 0)
-            
-            for symb in secondsInString {
-                arr.append(charItem(symb))
-            }
-            
-            return arr
-        }
+        return arr
     }
 }
 
