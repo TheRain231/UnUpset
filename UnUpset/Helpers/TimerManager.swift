@@ -14,11 +14,11 @@ final class TimerManager: ObservableObject {
     static let shared = TimerManager()
         
     // MARK: Properties
-    @Published var remainingTime: TimeInterval // 5 минут
+    @Published var remainingTime: TimeInterval
     @Published var progress: Double = 0.0
     @Published var isActive: Bool = false
     
-    let limit: TimeInterval = 15 //5 * 60 // 5 минут
+    let limit: TimeInterval = 5 * 60 // 5 минут
     
     private var timer: AnyCancellable?
     
@@ -28,7 +28,6 @@ final class TimerManager: ObservableObject {
     }
     
     func startTimer() {
-        guard !isActive else { return } // Избегаем повторного запуска
         timer?.cancel() // Отмена предыдущего таймера
         saveState(isActive: true)
         NotificationManager.shared.performNotification()
@@ -37,7 +36,6 @@ final class TimerManager: ObservableObject {
             .sink { [weak self] _ in
                 self?.updateTimer()
             }
-        remainingTime -= remainingTime.truncatingRemainder(dividingBy: 1)
     }
     
     func resumeTimer() {

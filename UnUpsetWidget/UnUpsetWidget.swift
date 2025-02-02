@@ -48,7 +48,7 @@ struct Provider: TimelineProvider {
             entries.append(TimerEntry(
                 date: currentDate.addingTimeInterval(totalTime),
                 remainingTime: 0,
-                isActive: false
+                isActive: true
             ))
         } else {
             entries.append(TimerEntry(
@@ -68,6 +68,7 @@ struct UnUpsetWidgetEntryView : View {
 
     var body: some View {
         TimerView(entry: entry)
+            .widgetURL(URL(string: "unupset://openTimer"))
     }
 }
 

@@ -84,6 +84,7 @@ struct TimerView: View {
                 .rotationEffect(Angle(degrees: 270))
         }
         .animation(.linear(duration: 1.0), value: entry.remainingTime)
+        
     }
     
     func stringMinutes() -> String {

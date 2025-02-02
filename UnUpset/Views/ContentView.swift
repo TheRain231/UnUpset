@@ -18,39 +18,32 @@ struct ContentView: View {
     @State private var showConfirmationAlert = false
     @State private var showMailUnavailableAlert = false
     
+    @State private var selectedTab = 0
+    
     var body: some View {
-        if #available(iOS 18.0, *) {
-            TabView {
-                Tab("Timer", systemImage: "timer") {
-                    TimerView()
+        TabView(selection: $selectedTab) {
+            TimerView()
+                .tabItem {
+                    Label("Timer",
+                          systemImage: "timer")
                 }
-                Tab("Settings", systemImage: "gear") {
-                    ShieldView()
+                .tag(0)
+            ShieldView()
+                .tabItem {
+                    Label("Settings",
+                          systemImage: "gear")
                 }
+                .tag(1)
+        }
+        .applyTabViewStyle(shieldManager: shieldManager, motionManager: motionManager,
+                           selectedAppearance: $selectedAppearance,
+                           showFeedbackForm: $showFeedbackForm,
+                           showConfirmationAlert: $showConfirmationAlert,
+                           showMailUnavailableAlert: $showMailUnavailableAlert)
+        .onOpenURL { url in
+            if url.absoluteString == "unupset://openTimer" {
+                selectedTab = 0
             }
-            .applyTabViewStyle(shieldManager: shieldManager, motionManager: motionManager,
-                               selectedAppearance: $selectedAppearance,
-                               showFeedbackForm: $showFeedbackForm,
-                               showConfirmationAlert: $showConfirmationAlert,
-                               showMailUnavailableAlert: $showMailUnavailableAlert)
-        } else {
-            TabView {
-                TimerView()
-                    .tabItem {
-                        Label("Timer",
-                              systemImage: "timer")
-                    }
-                ShieldView()
-                    .tabItem {
-                        Label("Settings",
-                              systemImage: "gear")
-                    }
-            }
-            .applyTabViewStyle(shieldManager: shieldManager, motionManager: motionManager,
-                               selectedAppearance: $selectedAppearance,
-                               showFeedbackForm: $showFeedbackForm,
-                               showConfirmationAlert: $showConfirmationAlert,
-                               showMailUnavailableAlert: $showMailUnavailableAlert)
         }
     }
 }
