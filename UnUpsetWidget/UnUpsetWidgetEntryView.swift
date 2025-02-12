@@ -29,7 +29,7 @@ struct TimerView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color("BackgroundColor"))
+            //.background(Color("BackgroundColor"))
         }
     }
     
@@ -68,19 +68,21 @@ struct TimerView: View {
             Circle()
                 .stroke(lineWidth: lineWidth)
                 .foregroundColor(Color("SecondColor"))
-            
+                .widgetAccentable()
             // Main circle
             Circle()
                 .trim(from: 0.0, to: min(1.0 - (entry.remainingTime / TimerManager.shared.limit), 1.0))
                 .stroke(style: StrokeStyle(lineWidth: lineWidth,
                                            lineCap: .round, lineJoin: .round))
                 .foregroundColor(Color("FirstColor"))
+                .widgetAccentable()
                 .rotationEffect(Angle(degrees: 270))
             Circle()
                 .trim(from: 0.0, to: 0.0001)
                 .stroke(style: StrokeStyle(lineWidth: lineWidth,
                                            lineCap: .round, lineJoin: .round))
                 .foregroundColor(Color("FirstColor"))
+                .widgetAccentable()
                 .rotationEffect(Angle(degrees: 270))
         }
         .animation(.linear(duration: 1.0), value: entry.remainingTime)

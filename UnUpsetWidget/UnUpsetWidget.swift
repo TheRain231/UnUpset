@@ -34,15 +34,24 @@ struct Provider: TimelineProvider {
         if isActive, let startDate = TimerData.shared.startDate {
             let totalTime = TimerManager.shared.limit - currentDate.timeIntervalSince(startDate)
             
-            for second in 0...Int(totalTime) {
-                let entryDate = currentDate.addingTimeInterval(Double(second))
-                let remaining = max(TimerManager.shared.limit - (entryDate.timeIntervalSince(startDate)), 0)
+            if totalTime > 0 {
+                for second in 0...Int(totalTime) {
+                    let entryDate = currentDate.addingTimeInterval(Double(second))
+                    let remaining = max(TimerManager.shared.limit - (entryDate.timeIntervalSince(startDate)), 0)
+                    entries.append(TimerEntry(
+                        date: entryDate,
+                        remainingTime: remaining,
+                        isActive: remaining > 0
+                    ))
+                }
+            } else {
                 entries.append(TimerEntry(
-                    date: entryDate,
-                    remainingTime: remaining,
-                    isActive: remaining > 0
+                    date: Date(),
+                    remainingTime: 0,
+                    isActive: true
                 ))
             }
+            
             
             // Добавляем финальное состояние
             entries.append(TimerEntry(
