@@ -14,8 +14,10 @@ struct PlayButtonActionIntent: AppIntent {
     static var description = IntentDescription("Starts or stops the 5-minute timer")
     
     func perform() async throws -> some IntentResult {
-        TimerManager.shared.startTimer()
-        ShieldManager.shared.shieldActivities()
+        if !TimerData.shared.isActive {
+            TimerManager.shared.startTimer()
+            ShieldManager.shared.shieldActivities()
+        }
         
         WidgetCenter.shared.reloadTimelines(ofKind: "UnUpsetWidget")
 

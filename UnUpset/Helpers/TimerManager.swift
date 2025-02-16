@@ -28,14 +28,16 @@ final class TimerManager: ObservableObject {
     }
     
     func startTimer() {
-        timer?.cancel() // Отмена предыдущего таймера
-        saveState(isActive: true)
-        NotificationManager.shared.performNotification()
-        timer = Timer.publish(every: 1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                self?.updateTimer()
-            }
+        if !TimerData.shared.isActive {
+            timer?.cancel() // Отмена предыдущего таймера
+            saveState(isActive: true)
+            NotificationManager.shared.performNotification()
+            timer = Timer.publish(every: 1, on: .main, in: .common)
+                .autoconnect()
+                .sink { [weak self] _ in
+                    self?.updateTimer()
+                }
+        }
     }
     
     func resumeTimer() {
