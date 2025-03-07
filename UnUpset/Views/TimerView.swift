@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TimerView: View {
     @StateObject var vm = TimerView.ViewModel()
-    private let lineWidth: CGFloat = 24.0
+    private let lineWidth: CGFloat = 33.0
     
     var body: some View {
         GeometryReader { proxy in
@@ -18,11 +18,15 @@ struct TimerView: View {
             VStack{
                 ZStack{
                     progressView
-                        .frame(width: size.height * 0.37,
-                               height: size.height * 0.37)
-                    countDown(fontSize: size.height * 0.128)
+                        .frame(width: size.height * 0.35,
+                               height: size.height * 0.35)
+                    VStack(spacing: 0){
+                        countDown(fontSize: size.height * 0.1)
+
+                        playButton
+                    }
                 }
-                playButton
+                .offset(y: -size.height * 0.075)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color("BackgroundColor"))
@@ -35,7 +39,6 @@ struct TimerView: View {
         } label: {
             Image(systemName: "play.fill")
                 .font(.system(size: 70))
-                .padding()
         }
         .buttonStyle(PlayButtonStyle(isActive: vm.isActive))
         .animation(.smooth, value: vm.progress)
