@@ -16,8 +16,6 @@ struct FamilyPermissionsSheet: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                
-                
                 RoundedRectangle(cornerRadius: 40)
                     .aspectRatio(contentRatio, contentMode: .fit)
                     .padding()
@@ -42,8 +40,8 @@ struct FamilyPermissionsSheet: View {
                     
                     Button {
                         Task {
-                            showSheet = false
                             _ = await ShieldManager.shared.requestAuthorization()
+                            showSheet = false
                             onDismiss()
                         }
                     } label: {

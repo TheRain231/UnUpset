@@ -55,7 +55,6 @@ struct ContentView: View {
                         })
                         .transition(.move(edge: .bottom))
                     } else if showNotificationsPermissionsSheet {
-                        
                         NotificationsPermissionsSheet(showSheet: $showNotificationsPermissionsSheet)
                             .transition(.move(edge: .bottom))
                     }

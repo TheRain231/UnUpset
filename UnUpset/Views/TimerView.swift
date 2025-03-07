@@ -60,6 +60,7 @@ struct TimerView: View {
                     .frame(width: fontSize * 0.6)
             }
         }
+        .foregroundStyle(Color("ButtonInactive"))
     }
     
     
