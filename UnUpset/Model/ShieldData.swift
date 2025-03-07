@@ -16,9 +16,15 @@ class ShieldData {
     
     private let savedApplicationsKey = "savedApplications"
     private let savedCategoriesKey = "savedCategories"
+    private let hasFamilyAccessKey = "hasFamilyAccess"
     
     private init() {
         userDefaults = UserDefaults(suiteName: "group.UnUpsetDeveloper.UnUpset")!
+    }
+    
+    var hasFamilyAccess: Bool {
+        get { userDefaults.bool(forKey: hasFamilyAccessKey)}
+        set { userDefaults.set(newValue, forKey: hasFamilyAccessKey) }
     }
     
     var savedApplications: [ApplicationToken]? {

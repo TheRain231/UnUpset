@@ -13,7 +13,6 @@ import MessageUI
 
 struct ShieldView: View {
     @ObservedObject private var vm = ShieldView.ViewModel()
-    @State private var notifications = NotificationManager.shared.notificationsEnabled
     
     var body: some View {
         VStack(spacing: 11) {
@@ -25,6 +24,15 @@ struct ShieldView: View {
         }
         .padding(.horizontal, 22)
         .background(Color("BackgroundColor"))
+        .alert("Notifications access denied",
+               isPresented: $vm.showAlertOnNotifications) {
+                    Button("Open settings", role: .destructive) {
+                        vm.openSettings()
+                    }
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("You can enable access notifications in settings.")
+                }
     }
     
     var profile: some View {
@@ -57,19 +65,12 @@ struct ShieldView: View {
     
     var settings: some View{
         VStack(spacing: 0) {
-            Toggle(isOn: $notifications) {
+            Toggle(isOn: $vm.notifications) {
                 Text("Reminders")
                     .padding(.vertical, 11)
             }
             .tint(Color("FirstColor"))
             .padding(.horizontal, 16)
-            .onChange(of: notifications) { newValue in
-                if notifications{
-                    NotificationManager.shared.enableNotifications()
-                } else {
-                    NotificationManager.shared.disableNotifications()
-                }
-            }
             
             Divider()
                 .overlay(Color("unupsetGray"))
@@ -90,6 +91,16 @@ struct ShieldView: View {
                         .foregroundStyle(Color("unupsetGray"))
                 }
             }
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 11)
+            
+            Divider()
+                .overlay(Color("unupsetGray"))
+                .padding(.horizontal, 16)
+            Link("Privacy Policy",
+                 destination: URL(string: "https://www.freeprivacypolicy.com/live/3e8da7a0-100d-4d21-8e8d-c7a5be00bc1b")!)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .foregroundStyle(.primary)
             .padding(.horizontal, 16)
             .padding(.vertical, 11)

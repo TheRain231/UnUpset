@@ -29,7 +29,7 @@ class MotionManager: ObservableObject {
                     let deltaY = abs(last.y - data.acceleration.y)
                     let deltaZ = abs(last.z - data.acceleration.z)
                     
-                    if deltaX + deltaY + deltaZ > 10 { // Threshold for shaking
+                    if deltaX + deltaY + deltaZ > 8 { // Threshold for shaking
                         self.isShaken = true
                     }
                 }

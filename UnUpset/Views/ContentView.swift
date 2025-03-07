@@ -17,6 +17,8 @@ struct ContentView: View {
     @State private var showFeedbackForm = false
     @State private var showConfirmationAlert = false
     @State private var showMailUnavailableAlert = false
+    @AppStorage("showFamilyPermissionsSheet") private var showFamilyPermissionsSheet = true
+    @State private var showNotificationsPermissionsSheet = false
     
     @State private var selectedTab = 0
     
@@ -40,6 +42,19 @@ struct ContentView: View {
                            showFeedbackForm: $showFeedbackForm,
                            showConfirmationAlert: $showConfirmationAlert,
                            showMailUnavailableAlert: $showMailUnavailableAlert)
+        .overlay(
+            Group {
+                if showFamilyPermissionsSheet {
+                    FamilyPermissionsSheet(showSheet: $showFamilyPermissionsSheet, onDismiss: {
+                        withAnimation {
+                            showNotificationsPermissionsSheet = true
+                        }
+                    })
+                } else if showNotificationsPermissionsSheet {
+                    NotificationsPermissionsSheet(showSheet: $showNotificationsPermissionsSheet)
+                }
+            }
+        )
         .onOpenURL { url in
             if url.absoluteString == "unupset://openTimer" {
                 selectedTab = 0

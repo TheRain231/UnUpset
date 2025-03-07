@@ -15,7 +15,24 @@ class ShieldManager: ObservableObject {
     
     @Published var discouragedSelections = FamilyActivitySelection()
     
+    let center = AuthorizationCenter.shared
     private let store = ManagedSettingsStore()
+    
+    func requestAuthorization() async -> Bool {
+        do {
+            try await ShieldManager.shared.center.requestAuthorization(for: .individual)
+            ShieldData.shared.hasFamilyAccess = true
+            
+            print("Family controlls enrolled")
+            
+            return true
+        } catch {
+            ShieldData.shared.hasFamilyAccess = false
+
+            print("Failed to enroll individual user with error: \(error.localizedDescription)")
+            return false
+        }
+    }
     
     func shieldActivities() {
         // Очистка старых настроек

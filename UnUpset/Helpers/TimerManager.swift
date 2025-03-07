@@ -28,15 +28,20 @@ final class TimerManager: ObservableObject {
     }
     
     func startTimer() {
-        if !TimerData.shared.isActive {
-            timer?.cancel() // Отмена предыдущего таймера
-            saveState(isActive: true)
-            NotificationManager.shared.performNotification()
-            timer = Timer.publish(every: 1, on: .main, in: .common)
-                .autoconnect()
-                .sink { [weak self] _ in
-                    self?.updateTimer()
-                }
+        Task {
+            guard await ShieldManager.shared.requestAuthorization() else {
+                return
+            }
+            if !TimerData.shared.isActive {
+                timer?.cancel() // Отмена предыдущего таймера
+                saveState(isActive: true)
+                NotificationManager.shared.performNotification()
+                timer = Timer.publish(every: 1, on: .main, in: .common)
+                    .autoconnect()
+                    .sink { [weak self] _ in
+                        self?.updateTimer()
+                    }
+            }
         }
     }
     
@@ -93,11 +98,12 @@ final class TimerManager: ObservableObject {
     }
     
     func saveState(isActive: Bool) {
-        self.isActive = isActive
-        TimerData.shared.isActive = isActive
-        if isActive {
-            let startDate = Date()
-            TimerData.shared.startDate = startDate
+        DispatchQueue.main.async {
+            self.isActive = isActive
+            TimerData.shared.isActive = isActive
+            if isActive {
+                TimerData.shared.startDate = Date()
+            }
         }
     }
 }

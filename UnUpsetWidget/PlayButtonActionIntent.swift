@@ -14,7 +14,7 @@ struct PlayButtonActionIntent: AppIntent {
     static var description = IntentDescription("Starts or stops the 5-minute timer")
     
     func perform() async throws -> some IntentResult {
-        if !TimerData.shared.isActive {
+        if !TimerData.shared.isActive && ShieldData.shared.hasFamilyAccess {
             TimerManager.shared.startTimer()
             ShieldManager.shared.shieldActivities()
         }

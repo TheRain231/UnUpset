@@ -17,6 +17,7 @@ extension TimerView {
         @ObservedObject var timerManager = TimerManager.shared
         @Published var isActive: Bool = false
         @Published var progress: CGFloat = 0.0
+        @Published var showsAlert: Bool = false
         
         private var cancellableOnProgress: AnyCancellable?
         private var cancellableOnOpen: AnyCancellable?

@@ -11,31 +11,20 @@ import FamilyControls
 @main
 struct UnUpsetApp: App {
     @Environment(\.scenePhase) private var phase
+    @AppStorage("isFirstLaunch") private var isFirstLaunch: Bool = true
     
     init(){
-        NotificationManager.shared.requestNotificationAuthorization()
-
-        if NotificationManager.shared.notificationsEnabled {
-            NotificationManager.shared.scheduleNotifications()
-        }
+//            NotificationCenter.default.post(name: .requestNotificationsAuthorization, object: nil)
+//            NotificationCenter.default.post(name: .requestFamilyControlsAuthorization, object: nil)
+//            NotificationManager.shared.requestNotificationAuthorization()
+//            _ = await ShieldManager.shared.requestAuthorization()
         
         TimerManager.shared.loadState()
     }
     
-    let center = AuthorizationCenter.shared
-    
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .onAppear {
-                    Task{
-                        do {
-                            try await center.requestAuthorization(for: .individual)
-                        } catch {
-                            print("Failed to enroll individual user with error: \(error.localizedDescription)")
-                        }
-                    }
-                }
         }
         .onChange(of: phase) { newPhase in
             switch newPhase {
@@ -54,4 +43,6 @@ struct UnUpsetApp: App {
 
 extension Notification.Name {
     static let appOpened = Notification.Name("appOpened")
+    static let requestNotificationsAuthorization = Notification.Name("requestNotificationsAuthorization")
+    static let requestFamilyControlsAuthorization = Notification.Name("requestFamilyControlsAuthorization")
 }

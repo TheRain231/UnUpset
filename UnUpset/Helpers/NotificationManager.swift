@@ -12,30 +12,45 @@ import SwiftUI
 class NotificationManager {
     static let shared = NotificationManager()
     
-    @AppStorage("notificationsEnabled") var notificationsEnabled: Bool = true
+    @AppStorage("notificationsEnabled") var notificationsEnabled: Bool = false {
+        didSet {
+            if notificationsEnabled {
+                NotificationManager.shared.scheduleNotifications()
+            }
+        }
+    }
     
     func requestNotificationAuthorization() {
         let center = UNUserNotificationCenter.current()
         
         center.getNotificationSettings { settings in
-            switch settings.authorizationStatus {
-            case .notDetermined:
-                center.requestAuthorization(options: [.alert, .sound]) { granted, error in
-                    if granted {
-                        print("Notification access granted.")
-                    } else {
-                        print("Notification access denied.\(String(describing: error?.localizedDescription))")
+            DispatchQueue.main.async {
+                switch settings.authorizationStatus {
+                case .notDetermined:
+                    center.requestAuthorization(options: [.alert, .sound]) { granted, error in
+                        DispatchQueue.main.async {
+                            if granted {
+                                print(".notDetermined: Notification access granted.")
+                                self.enableNotifications()
+                                NotificationCenter.default.post(name: .setUpNotification, object: nil)
+                            } else {
+                                print(".notDetermined: Notification access denied: \(String(describing: error?.localizedDescription))")
+                                self.notificationsEnabled = false
+                            }
+                        }
                     }
+                    
+                case .denied:
+                    print(".denied: Notification access denied")
+                    self.notificationsEnabled = false
+                    
+                case .authorized:
+                    print(".authorized: Notification access granted.")
+                    self.notificationsEnabled = true
+                    
+                default:
+                    break
                 }
-                return
-            case .denied:
-                print("Notification access denied")
-                return
-            case .authorized:
-                print("Notification access granted.")
-                return
-            default:
-                return
             }
         }
     }
@@ -133,4 +148,8 @@ class NotificationManager {
             }
         }
     }
+}
+
+extension Notification.Name {
+    static let setUpNotification = Notification.Name("setUpNotification")
 }
