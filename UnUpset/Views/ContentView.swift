@@ -43,17 +43,26 @@ struct ContentView: View {
                            showConfirmationAlert: $showConfirmationAlert,
                            showMailUnavailableAlert: $showMailUnavailableAlert)
         .overlay(
-            Group {
-                if showFamilyPermissionsSheet {
-                    FamilyPermissionsSheet(showSheet: $showFamilyPermissionsSheet, onDismiss: {
-                        withAnimation {
-                            showNotificationsPermissionsSheet = true
-                        }
-                    })
-                } else if showNotificationsPermissionsSheet {
-                    NotificationsPermissionsSheet(showSheet: $showNotificationsPermissionsSheet)
+            ZStack(alignment: .center) {
+                if showFamilyPermissionsSheet || showNotificationsPermissionsSheet {
+                    Color.black.opacity(0.33)
+                        .ignoresSafeArea()
+                    if showFamilyPermissionsSheet {
+                        FamilyPermissionsSheet(showSheet: $showFamilyPermissionsSheet, onDismiss: {
+                            withAnimation {
+                                showNotificationsPermissionsSheet = true
+                            }
+                        })
+                        .transition(.move(edge: .bottom))
+                    } else if showNotificationsPermissionsSheet {
+                        
+                        NotificationsPermissionsSheet(showSheet: $showNotificationsPermissionsSheet)
+                            .transition(.move(edge: .bottom))
+                    }
                 }
             }
+                .animation(.easeInOut, value: showFamilyPermissionsSheet)
+                .animation(.easeInOut, value: showNotificationsPermissionsSheet)
         )
         .onOpenURL { url in
             if url.absoluteString == "unupset://openTimer" {

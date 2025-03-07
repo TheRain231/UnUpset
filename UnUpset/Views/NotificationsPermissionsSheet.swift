@@ -15,9 +15,6 @@ struct NotificationsPermissionsSheet: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                Color.black.opacity(0.33)
-                    .ignoresSafeArea()
-                
                 RoundedRectangle(cornerRadius: 40)
                     .aspectRatio(contentRatio, contentMode: .fit)
                     .padding()
@@ -25,13 +22,13 @@ struct NotificationsPermissionsSheet: View {
                     .aspectRatio(contentRatio, contentMode: .fit)
                     .foregroundStyle(Color("BackgroundColor"))
                     .padding()
-                    .padding(1)
+                    .scaleEffect((proxy.size.height - 4) / proxy.size.height)
                 
                 VStack(spacing: 4) {
                     Text("Reminders")
                         .font(.system(size: 28, weight: .bold))
                     
-                    Text("самый крутой текст эвер форевер")
+                    Text("Allow reminders to stay productive.")
                         .font(.system(size: 15))
                         .multilineTextAlignment(.center)
                     
@@ -41,6 +38,9 @@ struct NotificationsPermissionsSheet: View {
                         showSheet = false
                         NotificationManager.shared.requestNotificationAuthorization()
                     } label: {
+                        ZStack {
+                            
+                        }
                         Text("Allow")
                             .padding(14)
                             .frame(maxWidth: .infinity)
@@ -55,10 +55,15 @@ struct NotificationsPermissionsSheet: View {
                                 } else if (colorScheme == .dark){
                                     RoundedRectangle(cornerRadius: 14)
                                         .stroke(lineWidth: 1)
+                                        .background {
+                                            RoundedRectangle(cornerRadius: 14)
+                                                .foregroundStyle(Color.background)
+                                        }
                                 }
                             }
                     }
                     .foregroundStyle(colorScheme == .dark ? .first : .primary)
+                    .contentShape(Rectangle())
                     .buttonStyle(.plain)
                     
                     Button {
@@ -74,6 +79,7 @@ struct NotificationsPermissionsSheet: View {
                 .aspectRatio(contentRatio, contentMode: .fit)
                 .padding()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

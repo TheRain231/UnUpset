@@ -16,8 +16,7 @@ struct FamilyPermissionsSheet: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                Color.black.opacity(0.33)
-                    .ignoresSafeArea()
+                
                 
                 RoundedRectangle(cornerRadius: 40)
                     .aspectRatio(contentRatio, contentMode: .fit)
@@ -26,7 +25,7 @@ struct FamilyPermissionsSheet: View {
                     .aspectRatio(contentRatio, contentMode: .fit)
                     .foregroundStyle(Color("BackgroundColor"))
                     .padding()
-                    .padding(1)
+                    .scaleEffect((proxy.size.height - 4) / proxy.size.height)
                 
                 VStack(spacing: 4) {
                     Text("Access")
@@ -54,14 +53,20 @@ struct FamilyPermissionsSheet: View {
                             .background {
                                 RoundedRectangle(cornerRadius: 14)
                                     .stroke(lineWidth: 1)
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .foregroundStyle(Color.background)
+                                    }
                             }
                     }
+                    .contentShape(Rectangle())
                     .buttonStyle(.plain)
                 }
                 .padding(32)
                 .aspectRatio(contentRatio, contentMode: .fit)
                 .padding()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
