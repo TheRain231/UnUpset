@@ -32,8 +32,10 @@ struct ContentView: View {
                 .tag(0)
             LimitsView()
                 .tabItem {
-                    Label("Limits", systemImage: "hand.raised")
+                    Label("Limits",
+                          systemImage: "hand.raised")
                 }
+                .tag(1)
             SettingsView()
                 .tabItem {
                     Label("Settings",
