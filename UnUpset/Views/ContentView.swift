@@ -90,9 +90,9 @@ extension View {
             .environment(\.horizontalSizeClass, .compact)
             .overlay(alignment: .bottom) {
                 Rectangle()
-                    .fill(.primary)
-                    .frame(height: 1)
-                    .offset(y: -50)
+                    .fill(.primary.opacity(0.5))
+                    .frame(height: 0.5)
+                    .offset(y: -49.5)
             }
             .onAppear {
                 setupTabBarAppearance()
