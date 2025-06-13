@@ -8,12 +8,12 @@
 import SwiftUI
 
 enum TimerLenghtOption: String, CaseIterable {
-    case min5 = "5 min"
-    case min15 = "15 min"
-    case min25 = "25 min"
-    case min35 = "35 min"
-    case min45 = "45 min"
-    case min55 = "55 min"
+    case min5 = "5min"
+    case min15 = "15min"
+    case min25 = "25min"
+    case min35 = "35min"
+    case min45 = "45min"
+    case min55 = "55min"
     
     func toSeconds() -> Double {
         switch self {

@@ -13,260 +13,136 @@ import MessageUI
 import StoreKit
 
 struct SettingsView: View {
-    @ObservedObject private var vm = SettingsView.ViewModel()
-    @Environment(\.requestReview) var requestReview
+    @StateObject private var viewModel = SettingsView.ViewModel()
+    @Environment(\.openURL) private var openURL
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 6) {
-    //            profile
-                settings
-                legal
-                contactUs
-                
-                Spacer()
+            VStack {
+                List {
+                    timerSettingsSection
+                    appSettingsSection
+                    contactSection
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                }
             }
-            .padding(.horizontal, 16)
-            .background(Color("BackgroundColor"))
             .navigationTitle("Settings")
-            .background(NavigationConfigurator { nc in
-                nc.navigationBar.titleTextAttributes = [.foregroundColor : Color.text]
+            .modifier(alertsModifier(viewModel: viewModel))
+        }
+    }
+    
+    private var timerSettingsSection: some View {
+        Section {
+            settingsRow(title: "Reminders", systemImage: "bell.fill", content:  {
+                Toggle(isOn: $viewModel.notifications) {}
+                    .tint(.first)
             })
-            .alert("Notifications access denied",
-                   isPresented: $vm.showAlertOnNotifications) {
-                Button("Open settings", role: .destructive) {
-                    vm.openSettings()
-                }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("You can enable access notifications in settings.")
-            }
-            .alert("Notifications access denied",
-                   isPresented: $vm.showPickerUnavailableAlert) {
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("You can't select blocked apps while timer is active.")
-            }
-        }
-    }
-    
-    var profile: some View {
-        HStack{
-            ZStack{
-                let height: CGFloat = 60
-                PersonIcon()
-                    .fill(Color("unupsetGray"))
-                    .frame(width: height, height: height)
-                    .clipShape(.circle)
-                Circle()
-                    .stroke()
-                    .frame(width: height, height: height)
-            }
-            VStack(alignment: .leading) {
-                Text("User")
-                    .font(.system(size: 22))
-                Text("@user")
-                    .font(.system(size: 13))
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8.5)
-        .background{
-            RoundedRectangle(cornerRadius: 13)
-                .stroke()
-        }
-    }
-    
-    var settings: some View {
-        VStack(spacing: 0) {
-            Toggle(isOn: $vm.notifications) {
-                HStack(spacing: 16) {
-                    squaredIcon(systemName: "bell.fill")
-                    Text("Reminders")
-                        .padding(.vertical, 11)
-                }
-            }
-            .tint(Color("FirstColor"))
-            .padding(.horizontal, 16)
             
-            divider
-            
-            HStack {
-                HStack(spacing: 16) {
-                    squaredIcon(systemName: "clock.arrow.trianglehead.2.counterclockwise.rotate.90")
-                    Text("Reminder frequency")
-                }
-                Spacer()
+            settingsRow(title: "Reminder Frequency", systemImage: "clock.arrow.trianglehead.2.counterclockwise.rotate.90", content:  {
                 Menu {
                     ForEach(ReminderFrequencyOption.allCases, id: \.self) { option in
                         Button(option.rawValue) {
-                            vm.selectRemindersFrequency(option)
+                            viewModel.selectRemindersFrequency(option)
                         }
                     }
                 } label: {
-                    Text(vm.reminderFrequency.rawValue)
-                        .foregroundStyle(Color("unupsetGray"))
+                    Text(viewModel.reminderFrequency.rawValue)
+                        .foregroundStyle(.secondaryText)
                     Image(systemName: "chevron.right")
-                        .foregroundStyle(Color("unupsetGray"))
+                        .foregroundStyle(.unupsetGray)
                 }
-            }
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 7)
+            })
             
-            divider
-            
-            HStack {
-                HStack(spacing: 16) {
-                    squaredIcon(systemName: "timer")
-                    Text("Timer length")
-                }
-                Spacer()
+            settingsRow(title: "Timer Lenght", systemImage: "timer", content:  {
                 Menu {
                     ForEach(TimerLenghtOption.allCases, id: \.self) { option in
                         Button(option.rawValue) {
-                            vm.selectTimerLenght(option)
+                            viewModel.selectTimerLenght(option)
                         }
                     }
                 } label: {
-                    Text(vm.timerLenght.rawValue)
-                        .foregroundStyle(Color("unupsetGray"))
+                    Text(viewModel.timerLenght.rawValue)
+                        .foregroundStyle(.secondaryText)
                     Image(systemName: "chevron.right")
-                        .foregroundStyle(Color("unupsetGray"))
+                        .foregroundStyle(.unupsetGray)
                 }
-            }
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 7)
-            
-            divider
-            
-            HStack(spacing: 16) {
-                squaredIcon(systemName: "grid")
-                Button {
-                    vm.selectAppsAction()
-                } label: {
-                    Text("Select Apps")
-                        .padding(.vertical, 11)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            
-            .padding(.horizontal, 16)
+            })
+            settingsRow(title: "Select Apps", systemImage: "square.grid.3x3.fill", subtitle: "Pick apps to block during focus.", action:  {
+                viewModel.selectAppsAction()
+            })
         }
-        .foregroundStyle(.primary)
-        .background{
-            RoundedRectangle(cornerRadius: 13)
-                .stroke()
-        }
-        .familyActivityPicker(isPresented: $vm.showActivityPicker, selection: $vm.shieldManager.discouragedSelections)
+        .familyActivityPicker(isPresented: $viewModel.showActivityPicker, selection: $viewModel.shieldManager.discouragedSelections)
     }
     
-    var legal: some View {
-        VStack(spacing: 0) {
-            HStack {
-                HStack(spacing: 16) {
-                    squaredIcon(systemName: "sun.max.fill")
-                    Text("Appearance")
-                        .padding(.vertical, 11)
-                }
-                Spacer()
+    private var appSettingsSection: some View {
+        Section {
+            settingsRow(title: "Appearance", systemImage: "sun.max.fill", content:  {
                 Menu {
                     ForEach(AppearanceOption.allCases, id: \.self) { option in
                         Button(option.title) {
-                            vm.selectAppearance(option)
+                            viewModel.selectAppearance(option)
                         }
                     }
                 } label: {
-                    Text(AppearanceOption(rawValue: vm.selectedAppearance)?.title ?? "Auto")
-                        .foregroundStyle(Color("unupsetGray"))
+                    Text(AppearanceOption(rawValue: viewModel.selectedAppearance)?.title ?? "Auto")
+                        .foregroundStyle(.secondaryText)
                     Image(systemName: "chevron.right")
-                        .foregroundStyle(Color("unupsetGray"))
+                        .foregroundStyle(.unupsetGray)
                 }
-            }
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 16)
+            })
             
-            divider
+//            settingsRow(title: "Language", systemImage: "globe")
             
-            HStack(spacing: 16) {
-                squaredIcon(systemName: "star.fill", isStared: true)
-                Button {
-                    requestReview()
-                } label: {
-                    Text("Rate the App")
-                        .padding(.vertical, 11)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            settingsRow(title: "Rate the App", systemImage: "star.fill", isStared: true, action: {
+                if let url = URL(string: "https://apps.apple.com/app/id6738584234") {
+                    openURL(url)
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 16)
-            .foregroundStyle(.primary)
+            })
             
-            divider
-            
-            HStack(spacing: 16) {
-                squaredIcon(systemName: "hand.raised.fill")
-                Link(destination: URL(string: "https://www.freeprivacypolicy.com/live/3e8da7a0-100d-4d21-8e8d-c7a5be00bc1b")!) {
-                    Text("Privacy Policy")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 11)
+            settingsRow(title: "Privacy Policy", systemImage: "shield.lefthalf.filled", action: {
+                if let url = URL(string: "https://www.freeprivacypolicy.com/live/3e8da7a0-100d-4d21-8e8d-c7a5be00bc1b") {
+                    openURL(url)
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 16)
+            })
         }
-        .background{
-            RoundedRectangle(cornerRadius: 13)
-                .stroke()
-        }
-        .padding(.top, 10)
     }
     
-    var divider: some View {
-        Divider()
-            .overlay(Color("unupsetGray"))
-            .padding(.horizontal, 16)
-            .padding(.leading, 46)
-    }
-    
-    var contactUs: some View {
-        VStack(alignment: .leading, spacing: 0) {
+    private var contactSection: some View {
+        let iconHeight: CGFloat = 40
+
+        return VStack(alignment: .leading, spacing: 0) {
             Text("Keep in Touch")
                 .font(.title2)
-            let height: CGFloat = 40
+                .fontWeight(.bold)
             HStack{
                 Link(destination: URL(string: "https://t.me/unupset_official")!) {
                     ZStack{
                         Circle()
-                            .stroke()
-                            .frame(width: height, height: height)
+                            .foregroundStyle(Color.background)
+                            .frame(width: iconHeight, height: iconHeight)
                         TelegramIcon()
-                            .frame(width: height * 19 / 40, height: height * 17 / 40)
+                            .frame(width: iconHeight * 19 / 40, height: iconHeight * 17 / 40)
                             .offset(x: -2) // only for this image
                     }
                 }
                 Button {
-                    vm.mailButtonAction()
+                    viewModel.mailButtonAction()
                 } label: {
                     ZStack{
                         Circle()
-                            .stroke()
-                            .frame(width: height, height: height)
+                            .foregroundStyle(Color.background)
+                            .frame(width: iconHeight, height: iconHeight)
                         Image(systemName: "envelope.fill")
                             .resizable()
-                            .frame(width: height * 23.2 / 40, height: height * 16.8 / 40)
+                            .frame(width: iconHeight * 23.2 / 40, height: iconHeight * 16.8 / 40)
                     }
                 }
             }
-            .sheet(isPresented: $vm.showFeedbackForm) {
+            .sheet(isPresented: $viewModel.showFeedbackForm) {
                 FeedbackView(subject: "Feedback", recipient: "unupsetdeveloper@gmail.com")
             }
-            .alert(isPresented: $vm.showMailUnavailableAlert) {
+            .alert(isPresented: $viewModel.showMailUnavailableAlert) {
                 Alert(title: Text("Error"),
                       message: Text("The email client is currently unavailable. Please ensure that you have a mail app installed."),
                       dismissButton: .default(Text("OK")))
@@ -278,15 +154,59 @@ struct SettingsView: View {
     }
 }
 
-struct NavigationConfigurator: UIViewControllerRepresentable {
-    var configure: (UINavigationController) -> Void = { _ in }
-
-    func makeUIViewController(context: UIViewControllerRepresentableContext<NavigationConfigurator>) -> UIViewController {
-        UIViewController()
+// MARK: - Helpers Extension
+extension SettingsView {
+    private func settingsRow(
+        title: String,
+        systemImage: String,
+        isStared: Bool = false,
+        subtitle: String? = nil,
+        action: (() -> ())? = nil,
+        @ViewBuilder content: @escaping () -> some View = {
+            EmptyView()
+        }
+    ) -> some View {
+        HStack(spacing: 16) {
+            squaredIcon(systemName: systemImage, isStared: isStared)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(title)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondaryText)
+                }
+            }
+            
+            Spacer()
+            
+            content()
+        }.onTapGesture {
+            if let action {
+                action()
+            }
+        }
     }
-    func updateUIViewController(_ uiViewController: UIViewController, context: UIViewControllerRepresentableContext<NavigationConfigurator>) {
-        if let nc = uiViewController.navigationController {
-            self.configure(nc)
+    
+    private struct alertsModifier: ViewModifier {
+        @ObservedObject var viewModel: SettingsView.ViewModel
+        
+        func body(content: Content) -> some View {
+            content
+                .alert("Notifications access denied",
+                       isPresented: $viewModel.showAlertOnNotifications) {
+                    Button("Open settings", role: .destructive) {
+                        viewModel.openSettings()
+                    }
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("You can enable access notifications in settings.")
+                }
+                .alert("Notifications access denied",
+                       isPresented: $viewModel.showPickerUnavailableAlert) {
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("You can't select blocked apps while timer is active.")
+                }
         }
     }
 }

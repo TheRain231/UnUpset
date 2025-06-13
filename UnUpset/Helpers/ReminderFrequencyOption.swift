@@ -8,11 +8,11 @@
 import SwiftUI
 
 enum ReminderFrequencyOption: String, CaseIterable {
-    case min30 = "30 min"
-    case h1 = "1 h"
-    case h2 = "2 h"
-    case h3 = "3 h"
-    case h4 = "4 h"
+    case min30 = "30min"
+    case h1 = "1h"
+    case h2 = "2h"
+    case h3 = "3h"
+    case h4 = "4h"
     
     func toHours() -> Double {
         switch self {
