@@ -26,7 +26,6 @@ struct TimerView: View {
                         playButton
                     }
                 }
-                .offset(y: -size.height * 0.075)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color("BackgroundColor"))
