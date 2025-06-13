@@ -10,8 +10,8 @@ import AppIntents
 import WidgetKit
 
 struct PlayButtonActionIntent: AppIntent {
-    static var title: LocalizedStringResource = "Toggle 5-minute timer"
-    static var description = IntentDescription("Starts or stops the 5-minute timer")
+    static var title: LocalizedStringResource = "Toggle the timer"
+    static var description = IntentDescription("Starts or stops the timer")
     
     func perform() async throws -> some IntentResult {
         if !TimerData.shared.isActive && ShieldData.shared.hasFamilyAccess {

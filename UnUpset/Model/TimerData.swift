@@ -14,10 +14,16 @@ class TimerData {
     private let userDefaults: UserDefaults
     private let userDefaultsKeyStartDate = "TimerStartDate"
     private let userDefaultsKeyIsActive = "TimerIsActive"
-    private var userDefaultsRemainingTimeKey = "remainingTime"
+    private let userDefaultsRemainingTimeKey = "remainingTime"
+    private let timerLenghtKey = "timerLenght"
     
     private init() {
         userDefaults = UserDefaults(suiteName: "group.UnUpsetDeveloper.UnUpset")!
+    }
+    
+    var timerLenght: Double {
+        get { userDefaults.double(forKey: timerLenghtKey) }
+        set { userDefaults.set(newValue, forKey: timerLenghtKey) }
     }
     
     var remainingTime: Double {

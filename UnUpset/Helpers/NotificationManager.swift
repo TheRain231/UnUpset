@@ -11,11 +11,12 @@ import SwiftUI
 
 class NotificationManager {
     static let shared = NotificationManager()
+    @AppStorage("reminderFrequencyMinutes") var reminderFrequency = 180.0
     
     @AppStorage("notificationsEnabled") var notificationsEnabled: Bool = false {
         didSet {
             if notificationsEnabled {
-                NotificationManager.shared.scheduleNotifications()
+                NotificationManager.shared.scheduleNotifications(frequency: reminderFrequency)
             }
         }
     }
@@ -74,16 +75,32 @@ class NotificationManager {
         }
     }
     
-    func scheduleNotifications(){
-        let hours = [10, 13, 16, 19]
-        
-        for hour in hours {
-            var dateComponents = DateComponents()
-            dateComponents.hour = hour
+    func scheduleNotifications(frequency: Double) {
+        Task {
+            reminderFrequency = frequency
             
-            let identifier = "DailyReminder\(hour)"
+            var minutes: [Int] = []
+            for i in 0...Int(720/reminderFrequency){
+                minutes.append(540 + i * Int(reminderFrequency))
+            }
+            let dailyReminderIdentifiers = await getPendingNotifications().filter { $0.starts(with: "DailyReminder") }
             
-            createCalendarNotification(title: "It's time to work!", body: "You better set this timer!", dateComponents: dateComponents, identifier: identifier)
+            let notificationCenter = UNUserNotificationCenter.current()
+            notificationCenter.removePendingNotificationRequests(withIdentifiers: dailyReminderIdentifiers)
+            notificationCenter.removeAllDeliveredNotifications()
+            
+            if notificationsEnabled {
+                for minute in minutes {
+                    var dateComponents = DateComponents()
+                    dateComponents.hour = minute / 60
+                    dateComponents.minute = minute % 60
+                    
+                    let identifier = "DailyReminder\(minute)"
+                    
+                    createCalendarNotification(title: "It's time to work!", body: "You better set this timer!", dateComponents: dateComponents, identifier: identifier)
+                }
+                print("Notifications have been set to \(minutes).")
+            }
         }
     }
     
@@ -110,7 +127,7 @@ class NotificationManager {
     func enableNotifications() {
         notificationsEnabled = true
         requestNotificationAuthorization()
-        scheduleNotifications()
+        scheduleNotifications(frequency: reminderFrequency)
         print("Notifications have been enabled.")
     }
     

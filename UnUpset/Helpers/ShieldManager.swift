@@ -15,6 +15,14 @@ class ShieldManager: ObservableObject {
     
     @Published var discouragedSelections = FamilyActivitySelection()
     
+    struct ShieldTask: Identifiable {
+        let id: UUID
+        var selection: FamilyActivitySelection
+        var isActive: Bool = false
+    }
+
+    @Published var shieldTasks: [ShieldTask] = []
+    
     let center = AuthorizationCenter.shared
     private let store = ManagedSettingsStore()
     
@@ -34,40 +42,64 @@ class ShieldManager: ObservableObject {
         }
     }
     
-    func shieldActivities() {
-        // Очистка старых настроек
-        store.clearAllSettings()
-        
-        // Загрузка сохраненных данных из sharedDefaults
-        var applications = discouragedSelections.applicationTokens
-        var categories = discouragedSelections.categoryTokens
-        
-        if applications.isEmpty {
-            if let savedApplications = ShieldData.shared.savedApplications {
-                applications = Set(savedApplications) // Преобразуем массив в множество
-            }
-        }
-        
-        if categories.isEmpty {
-            if let savedCategories = ShieldData.shared.savedCategories {
-                categories = Set(savedCategories) // Преобразуем массив в множество
-            }
-        }
-        
-        // Установка новых настроек
-        store.shield.applications = applications.isEmpty ? nil : applications
-        store.shield.applicationCategories = categories.isEmpty ? .all() : .specific(categories)
-        store.shield.webDomainCategories = categories.isEmpty ? .all() : .specific(categories)
+    init() {
+        discouragedSelections.applicationTokens = Set(ShieldData.shared.savedApplications)
+        discouragedSelections.categoryTokens = Set(ShieldData.shared.savedCategories)
+        discouragedSelections.webDomainTokens = Set(ShieldData.shared.savedWebDomainCategories)
     }
     
-    func saveDiscouragedSelections() {
-        // Сохранение настроек в sharedDefaults
+    func updateCategories() {
         ShieldData.shared.savedApplications = Array(discouragedSelections.applicationTokens)
         ShieldData.shared.savedCategories = Array(discouragedSelections.categoryTokens)
+        ShieldData.shared.savedWebDomainCategories = Array(discouragedSelections.webDomainTokens)
+        
+        if TimerData.shared.isActive {
+            shieldActivities()
+        }
+    }
+    
+    func shieldActivities() {
+        store.clearAllSettings()
+        
+        let applications = discouragedSelections.applicationTokens
+        let categories = discouragedSelections.categoryTokens
+        let websites = discouragedSelections.webDomainTokens
+        
+        store.shield.applications = applications.isEmpty ? nil : applications
+        store.shield.applicationCategories = categories.isEmpty && applications.isEmpty ? .all() : .specific(categories)
+        
+        // Блокируем конкретные веб-домены
+        store.shield.webDomains = websites.isEmpty ? nil : websites
     }
     
     func unshieldActivities() {
         // Сброс всех настроек
         store.clearAllSettings()
+    }
+    
+    func startShield(for taskID: UUID) {
+        guard let taskIndex = shieldTasks.firstIndex(where: { $0.id == taskID }) else { return }
+        let task = shieldTasks[taskIndex]
+
+        let taskStore = ManagedSettingsStore(named: ManagedSettingsStore.Name(rawValue: task.id.uuidString))
+
+        let apps = task.selection.applicationTokens
+        let cats = task.selection.categoryTokens
+        let sites = task.selection.webDomainTokens
+
+        taskStore.shield.applications = apps.isEmpty ? nil : apps
+        taskStore.shield.applicationCategories = cats.isEmpty && apps.isEmpty ? .all() : .specific(cats)
+        taskStore.shield.webDomains = sites.isEmpty ? nil : sites
+
+        shieldTasks[taskIndex].isActive = true
+    }
+
+    func stopShield(for taskID: UUID) {
+        guard let taskIndex = shieldTasks.firstIndex(where: { $0.id == taskID }) else { return }
+
+        let taskStore = ManagedSettingsStore(named: ManagedSettingsStore.Name(rawValue: taskID.uuidString))
+        taskStore.clearAllSettings()
+
+        shieldTasks[taskIndex].isActive = false
     }
 }

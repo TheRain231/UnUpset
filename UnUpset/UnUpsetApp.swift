@@ -11,14 +11,8 @@ import FamilyControls
 @main
 struct UnUpsetApp: App {
     @Environment(\.scenePhase) private var phase
-    @AppStorage("isFirstLaunch") private var isFirstLaunch: Bool = true
     
     init(){
-//            NotificationCenter.default.post(name: .requestNotificationsAuthorization, object: nil)
-//            NotificationCenter.default.post(name: .requestFamilyControlsAuthorization, object: nil)
-//            NotificationManager.shared.requestNotificationAuthorization()
-//            _ = await ShieldManager.shared.requestAuthorization()
-        
         TimerManager.shared.loadState()
     }
     

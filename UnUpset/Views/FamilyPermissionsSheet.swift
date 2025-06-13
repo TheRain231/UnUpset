@@ -34,7 +34,8 @@ struct FamilyPermissionsSheet: View {
                     
                     Spacer()
                     UnUpsetIcon()
-                        .frame(width: proxy.size.width / 4.18, height: proxy.size.height / 9.43)
+                        .aspectRatio(96.25/82.5, contentMode: .fit)
+                        .frame(width: proxy.size.width / 4.18)
                         
                     Spacer()
                     

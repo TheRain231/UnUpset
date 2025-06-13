@@ -21,7 +21,7 @@ struct TimerView: View {
                         .frame(width: size.height * 0.35,
                                height: size.height * 0.35)
                     VStack(spacing: 0){
-                        countDown(fontSize: size.height * 0.1)
+                        countDown(fontSize: size.width * 0.16)
 
                         playButton
                     }
@@ -47,9 +47,11 @@ struct TimerView: View {
     @ViewBuilder
     func countDown(fontSize: CGFloat) -> some View {
         HStack(alignment: .center, spacing: 0) {
-            Text(vm.stringMinutes())
-                .font(.system(size: fontSize, weight: .light))
-                .frame(width: fontSize * 0.6, alignment: .trailing)
+            ForEach(vm.stringMinutes()) { symbol in
+                Text(symbol.symbol)
+                    .font(.system(size: fontSize, weight: .light))
+                    .frame(width: fontSize * 0.6)
+            }
             Text(":")
                 .font(.system(size: fontSize, weight: .light))
                 .offset(y: -fontSize * 0.1)

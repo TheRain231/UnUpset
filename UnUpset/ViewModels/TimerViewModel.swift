@@ -45,6 +45,9 @@ extension TimerView {
             timerManager.startTimer()
             ShieldManager.shared.shieldActivities()
             WidgetCenter.shared.reloadTimelines(ofKind: "UnUpsetWidget")
+            DispatchQueue.main.async {
+                self.objectWillChange.send()
+            }
         }
         
         func loadState() {
@@ -60,8 +63,15 @@ extension TimerView {
         }
         
         // MARK: UI helpers
-        func stringMinutes() -> String {
-            return String(format: "%01i", Int(timerManager.remainingTime) / 60)
+        func stringMinutes() -> [charItem] {
+            var arr: [charItem] = []
+            let minutesInString = String(Int(timerManager.remainingTime) / 60)
+            
+            for symb in minutesInString {
+                arr.append(charItem(symb))
+            }
+            
+            return arr
         }
         
         func stringSeconds() -> [charItem] {

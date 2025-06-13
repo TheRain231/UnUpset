@@ -46,9 +46,11 @@ struct TimerView: View {
     @ViewBuilder
     func countDown(fontSize: CGFloat) -> some View {
         HStack(alignment: .center, spacing: 0) {
-            Text(stringMinutes())
-                .font(.system(size: fontSize, weight: .light))
-                .frame(width: fontSize * 0.6, alignment: .trailing)
+            ForEach(stringMinutes()) { symbol in
+                Text(symbol.symbol)
+                    .font(.system(size: fontSize, weight: .light))
+                    .frame(width: fontSize * 0.6)
+            }
             Text(":")
                 .font(.system(size: fontSize, weight: .light))
                 .offset(y: -fontSize * 0.1)
@@ -86,11 +88,17 @@ struct TimerView: View {
                 .rotationEffect(Angle(degrees: 270))
         }
         .animation(.linear(duration: 1.0), value: entry.remainingTime)
-        
     }
     
-    func stringMinutes() -> String {
-        return String(format: "%01i", Int(entry.remainingTime) / 60)
+    func stringMinutes() -> [charItem] {
+        var arr: [charItem] = []
+        let minutesInString = String(Int(entry.remainingTime) / 60)
+        
+        for symb in minutesInString {
+            arr.append(charItem(symb))
+        }
+        
+        return arr
     }
     
     func stringSeconds() -> [charItem] {

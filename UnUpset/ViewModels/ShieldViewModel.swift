@@ -1,5 +1,5 @@
 //
-//  ShieldViewModel.swift
+//  SettingsViewModel.swift
 //  UnUpset
 //
 //  Created by Андрей Степанов on 21.11.2024.
@@ -8,14 +8,23 @@
 import Foundation
 import SwiftUI
 import Combine
+import MessageUI
 
-extension ShieldView {
+extension SettingsView {
     final class ViewModel: ObservableObject {
         @ObservedObject var shieldManager = ShieldManager.shared
         @AppStorage("selectedAppearance") var selectedAppearance = AppearanceOption.auto.rawValue
+        @AppStorage("timerLenght") var timerLenght = TimerLenghtOption.min5
+        @AppStorage("reminderFrequency") var reminderFrequency = ReminderFrequencyOption.h3
         
         @Published var notifications = NotificationManager.shared.notificationsEnabled
         @Published var showAlertOnNotifications = false
+        @Published var showActivityPicker = false
+        @Published var showPickerUnavailableAlert = false
+
+        
+        @Published var showFeedbackForm = false
+        @Published var showMailUnavailableAlert = false
         
         private var cancellables = Set<AnyCancellable>()
         
@@ -41,6 +50,14 @@ extension ShieldView {
                     }
                 }
                 .store(in: &cancellables)
+            $showActivityPicker
+                .sink { newValue in
+                    if !newValue {
+                        ShieldManager.shared.updateCategories()
+                    }
+                }
+                .store(in: &cancellables)
+            
             NotificationCenter.default.publisher(for: .setUpNotification)
                 .sink { [weak self] _ in
                     self?.notifications = true
@@ -56,6 +73,34 @@ extension ShieldView {
 
         func selectAppearance(_ option: AppearanceOption) {
             selectedAppearance = option.rawValue
+        }
+        
+        func selectTimerLenght(_ option: TimerLenghtOption) {
+            timerLenght = option
+            TimerManager.shared.limit = option.toSeconds()
+        }
+        
+        func selectRemindersFrequency(_ option: ReminderFrequencyOption) {
+            print("reminderFrequency changing to \(option.rawValue)")
+            reminderFrequency = option
+            NotificationManager.shared.scheduleNotifications(frequency: option.toMinutes())
+        }
+        
+        func mailButtonAction() {
+            if MFMailComposeViewController.canSendMail() {
+                showFeedbackForm = true
+            } else {
+                showMailUnavailableAlert = true
+            }
+        }
+
+        func selectAppsAction() {
+            print(TimerManager.shared.isActive)
+            if TimerManager.shared.isActive {
+                showPickerUnavailableAlert = true
+            } else {
+                showActivityPicker = true
+            }
         }
     }
 }

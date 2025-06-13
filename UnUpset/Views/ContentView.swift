@@ -30,12 +30,16 @@ struct ContentView: View {
                           systemImage: "timer")
                 }
                 .tag(0)
-            ShieldView()
+            LimitsView()
+                .tabItem {
+                    Label("Limits", systemImage: "hand.raised")
+                }
+            SettingsView()
                 .tabItem {
                     Label("Settings",
                           systemImage: "gear")
                 }
-                .tag(1)
+                .tag(2)
         }
         .applyTabViewStyle(shieldManager: shieldManager, motionManager: motionManager,
                            selectedAppearance: $selectedAppearance,
@@ -128,8 +132,6 @@ func setupTabBarAppearance() {
     appearance.backgroundColor = UIColor(named: "BackgroundColor")
     appearance.stackedLayoutAppearance.selected.iconColor = UIColor(named: "AccentColor")
     appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(named: "AccentColor")!]
-    appearance.stackedLayoutAppearance.disabled.iconColor = UIColor(named: "unupsetGray")
-    appearance.stackedLayoutAppearance.disabled.titleTextAttributes = [.foregroundColor: UIColor(named: "unupsetGray")!]
     
     UITabBar.appearance().standardAppearance = appearance
     UITabBar.appearance().scrollEdgeAppearance = appearance

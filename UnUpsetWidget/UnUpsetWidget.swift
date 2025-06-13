@@ -9,72 +9,91 @@ import WidgetKit
 import SwiftUI
 
 struct Provider: TimelineProvider {
+    private let defaults = UserDefaults(suiteName: "group.UnUpsetDeveloper.UnUpset")!
+    
     func placeholder(in context: Context) -> TimerEntry {
-        TimerEntry(date: Date(), remainingTime: TimerManager.shared.limit, isActive: false)
+        TimerEntry(date: Date(), remainingTime: 5 * 60, isActive: false)
     }
-
+    
     func getSnapshot(in context: Context, completion: @escaping (TimerEntry) -> ()) {
-        let isActive = TimerData.shared.isActive
-        let remaining = isActive ?
-                                max(TimerManager.shared.limit - Date().timeIntervalSince(TimerData.shared.startDate!), 0)
-                                : TimerManager.shared.limit
+        let pendingLimit = defaults.double(forKey: "pendingLimit")
+        let isActive = defaults.bool(forKey: "TimerIsActive")
+        let startDate = defaults.object(forKey: "TimerStartDate") as? Date ?? Date()
+        
+        let remaining = calculateRemainingTime(startDate: startDate,
+                                             pendingLimit: pendingLimit,
+                                             isActive: isActive)
         
         completion(TimerEntry(
             date: Date(),
             remainingTime: remaining,
-            isActive: isActive
+            isActive: isActive && remaining > 0
         ))
     }
-
+    
     func getTimeline(in context: Context, completion: @escaping (Timeline<TimerEntry>) -> ()) {
-        let currentDate = Date()
-        var entries: [TimerEntry] = []
-        let isActive = TimerData.shared.isActive
+        let pendingLimit = defaults.double(forKey: "pendingLimit")
+        let isActive = defaults.bool(forKey: "TimerIsActive")
+        let startDate = defaults.object(forKey: "TimerStartDate") as? Date ?? Date()
         
-        if isActive, let startDate = TimerData.shared.startDate {
-            let totalTime = TimerManager.shared.limit - currentDate.timeIntervalSince(startDate)
+        var entries: [TimerEntry] = []
+        let currentDate = Date()
+        
+        if isActive {
+            let elapsed = currentDate.timeIntervalSince(startDate)
+            let remainingTotal = pendingLimit - elapsed
             
-            if totalTime > 0 {
-                for second in 0...Int(totalTime) {
-                    let entryDate = currentDate.addingTimeInterval(Double(second))
-                    let remaining = max(TimerManager.shared.limit - (entryDate.timeIntervalSince(startDate)), 0)
+            if remainingTotal > 0 {
+                // Генерируем записи с шагом в 1 секунду, но не более 60 на один запрос
+                let entriesCount = min(Int(remainingTotal), 60)
+                for i in 0..<entriesCount {
+                    let entryDate = currentDate.addingTimeInterval(Double(i))
+                    let elapsed = entryDate.timeIntervalSince(startDate)
+                    let remaining = max(pendingLimit - elapsed, 0)
+                    
                     entries.append(TimerEntry(
                         date: entryDate,
                         remainingTime: remaining,
                         isActive: remaining > 0
                     ))
                 }
-            } else {
+                
+                // Планируем следующее обновление через 60 секунд или раньше
+                let nextUpdateDate = currentDate.addingTimeInterval(Double(entriesCount))
                 entries.append(TimerEntry(
-                    date: Date(),
-                    remainingTime: 0,
+                    date: nextUpdateDate,
+                    remainingTime: max(pendingLimit - nextUpdateDate.timeIntervalSince(startDate), 0),
                     isActive: true
                 ))
+            } else {
+                entries.append(TimerEntry(
+                    date: currentDate,
+                    remainingTime: 0,
+                    isActive: false
+                ))
             }
-            
-            
-            // Добавляем финальное состояние
-            entries.append(TimerEntry(
-                date: currentDate.addingTimeInterval(totalTime),
-                remainingTime: 0,
-                isActive: true
-            ))
         } else {
             entries.append(TimerEntry(
                 date: currentDate,
-                remainingTime: TimerManager.shared.limit,
+                remainingTime: pendingLimit,
                 isActive: false
             ))
         }
         
-        let timeline = Timeline(entries: entries, policy: .atEnd)
+        let timeline = Timeline(entries: entries, policy: .after(entries.last?.date ?? currentDate))
         completion(timeline)
+    }
+    
+    private func calculateRemainingTime(startDate: Date, pendingLimit: Double, isActive: Bool) -> Double {
+        guard isActive else { return pendingLimit }
+        let elapsed = Date().timeIntervalSince(startDate)
+        return max(pendingLimit - elapsed, 0)
     }
 }
 
 struct UnUpsetWidgetEntryView : View {
     var entry: Provider.Entry
-
+    
     var body: some View {
         TimerView(entry: entry)
             .widgetURL(URL(string: "unupset://openTimer"))
@@ -95,17 +114,11 @@ struct TimerEntry: TimelineEntry {
 
 struct UnUpsetWidget: Widget {
     let kind: String = "UnUpsetWidget"
-
+    
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
-            if #available(iOS 17.0, *) {
-                UnUpsetWidgetEntryView(entry: entry)
-                    .containerBackground(Color("BackgroundColor"), for: .widget)
-            } else {
-                UnUpsetWidgetEntryView(entry: entry)
-                    .padding()
-                    .background(Color("BackgroundColor"))
-            }
+            UnUpsetWidgetEntryView(entry: entry)
+                .containerBackground(Color("BackgroundColor"), for: .widget)
         }
         .configurationDisplayName("Timer")
         .description("Timer widget")
